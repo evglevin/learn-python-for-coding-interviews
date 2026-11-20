@@ -17,18 +17,21 @@ import {
   loadSidebarOpen,
   loadSolvedIds,
   loadTheme,
+  loadWelcomeSeen,
   saveActiveLessonId,
   saveFontSize,
   saveLessonTabs,
   saveSidebarOpen,
   saveSolvedIds,
   saveTheme,
+  saveWelcomeSeen,
 } from './lib/storage';
 import { TopBar } from './components/TopBar';
 import { LessonPane } from './components/LessonPane';
 import { CodeEditor } from './components/CodeEditor';
 import { ConsolePanel } from './components/ConsolePanel';
 import { CurriculumSidebar } from './components/CurriculumSidebar';
+import { WelcomeDialog } from './components/WelcomeDialog';
 
 /** Tracks a mouse drag on window until mouseup, with a resize cursor shown meanwhile. */
 function startDrag(
@@ -64,6 +67,7 @@ export default function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => loadTheme());
   const [fontSize, setFontSize] = useState<number>(() => loadFontSize());
   const [solvedIds, setSolvedIds] = useState<Set<string>>(() => loadSolvedIds());
+  const [showWelcome, setShowWelcome] = useState<boolean>(() => !loadWelcomeSeen());
 
   const [activeLessonId, setActiveLessonId] = useState<string>(
     () => getLessonById(loadActiveLessonId() ?? '').id
@@ -266,6 +270,11 @@ export default function App() {
     setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
   }, []);
 
+  const handleCloseWelcome = useCallback(() => {
+    saveWelcomeSeen();
+    setShowWelcome(false);
+  }, []);
+
   const handleToggleExpand = useCallback(() => setEditorExpanded((e) => !e), []);
   const handleToggleConsole = useCallback(() => setConsoleOpen((o) => !o), []);
 
@@ -408,6 +417,14 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {showWelcome && (
+        <WelcomeDialog
+          totalLessons={LESSONS.length}
+          totalSections={SECTIONS.length}
+          onClose={handleCloseWelcome}
+        />
+      )}
     </div>
   );
 }
