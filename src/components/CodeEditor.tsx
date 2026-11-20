@@ -213,22 +213,15 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
         overflow: 'hidden',
         zIndex: '100',
       },
-      // Autocomplete popup styled after VS Code's suggest widget.
-      '.cm-tooltip.cm-tooltip-autocomplete': {
-        backgroundColor: isDark ? '#252526' : '#f8f8f8',
-        border: isDark ? '1px solid #454545' : '1px solid #c8c8c8',
-        borderRadius: '3px',
-        boxShadow: isDark
-          ? '0 2px 8px rgba(0, 0, 0, 0.36)'
-          : '0 2px 8px rgba(0, 0, 0, 0.16)',
-      },
+      // Autocomplete popup inherits `.cm-tooltip` surface, border, radius, and shadow
+      // so it matches the signature-help panel above the cursor.
       '.cm-tooltip.cm-tooltip-autocomplete > ul': {
         fontFamily: MONO_FONT,
         fontSize: `${fontSize}px`,
-        maxHeight: `${completionRowHeight * 12}px`,
+        maxHeight: `${completionRowHeight * 12 + 8}px`,
         minWidth: '260px',
         maxWidth: '520px',
-        padding: '0',
+        padding: '4px',
       },
       '.cm-tooltip-autocomplete ul li': {
         display: 'flex',
@@ -236,16 +229,16 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
         gap: '6px',
         height: `${completionRowHeight}px`,
         lineHeight: `${completionRowHeight}px`,
-        padding: '0 10px 0 6px',
-        borderRadius: '0',
-        color: isDark ? '#cccccc' : '#1f1f1f',
+        padding: '0 8px',
+        borderRadius: '5px',
+        color: isDark ? '#e4e4e7' : '#18181b',
       },
       '.cm-tooltip-autocomplete ul li:hover': {
-        backgroundColor: isDark ? '#2a2d2e' : '#ececec',
+        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.05)',
       },
       '.cm-tooltip-autocomplete ul li[aria-selected], .cm-tooltip-autocomplete-disabled ul li[aria-selected]': {
-        backgroundColor: isDark ? '#04395e' : '#d6ebff',
-        color: isDark ? '#ffffff' : '#000000',
+        backgroundColor: isDark ? 'rgba(77, 142, 255, 0.24)' : 'rgba(7, 102, 255, 0.12)',
+        color: isDark ? '#ffffff' : '#14161a',
       },
       '.cm-completionLabel': {
         overflow: 'hidden',
@@ -255,7 +248,7 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
       '.cm-completionMatchedText': {
         textDecoration: 'none',
         fontWeight: '700',
-        color: isDark ? '#2aaaff' : '#0066bf',
+        color: isDark ? '#6da6ff' : '#0766ff',
       },
       // Like VS Code, only the focused row shows its detail.
       '.cm-completionDetail': {
@@ -265,7 +258,7 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
         fontStyle: 'normal',
         fontSize: '0.9em',
         whiteSpace: 'nowrap',
-        color: isDark ? '#9d9d9d' : '#616161',
+        color: isDark ? '#a1a1aa' : '#6b7280',
       },
       'li[aria-selected] .cm-completionDetail': {
         display: 'inline',
