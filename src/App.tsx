@@ -97,7 +97,12 @@ export default function App({ initialTheme }: { initialTheme: 'dark' | 'light' }
   // Lessons sidebar
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => loadSidebarOpen());
   const [sidebarWidth, setSidebarWidth] = useState<number>(268);
-  const [collapsedSections, setCollapsedSections] = useState(loadCollapsedSections);
+  // The saved state may collapse the restored lesson's section; keep it visible on load.
+  const [collapsedSections, setCollapsedSections] = useState(() => {
+    const collapsed = loadCollapsedSections();
+    collapsed.delete(currentLesson.sectionId);
+    return collapsed;
+  });
 
   // Runtime + console state
   const { status: runtimeStatus, error: runtimeError } = useSyncExternalStore(
