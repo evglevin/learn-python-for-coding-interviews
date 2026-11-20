@@ -1,4 +1,11 @@
-import React, { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import {
   LESSONS,
   SECTIONS,
@@ -11,7 +18,6 @@ import { pyodideRunner } from './lib/pyodideRunner';
 import {
   clearAllProgress,
   defaultTabs,
-  loadActiveLessonId,
   loadCollapsedSections,
   loadFontSize,
   loadLessonTabs,
@@ -27,6 +33,7 @@ import {
   saveTheme,
   saveWelcomeSeen,
 } from './lib/storage';
+import { lessonIdFromUrl, pushLessonUrl, showLessonInUrl } from './lib/lessonUrl';
 import { TopBar } from './components/TopBar';
 import { LessonPane } from './components/LessonPane';
 import { CodeEditor, type CodeEditorHandle } from './components/CodeEditor';
@@ -64,15 +71,19 @@ const ResizeGutter: React.FC<{ onMouseDown: (e: React.MouseEvent) => void; title
   </div>
 );
 
-export default function App({ initialTheme }: { initialTheme: 'dark' | 'light' }) {
+export default function App({
+  initialTheme,
+  initialLessonId,
+}: {
+  initialTheme: 'dark' | 'light';
+  initialLessonId: string;
+}) {
   const [theme, setTheme] = useState(initialTheme);
   const [fontSize, setFontSize] = useState<number>(() => loadFontSize());
   const [solvedIds, setSolvedIds] = useState<Set<string>>(() => loadSolvedIds());
   const [showWelcome, setShowWelcome] = useState<boolean>(() => !loadWelcomeSeen());
 
-  const [activeLessonId, setActiveLessonId] = useState<string>(
-    () => getLessonById(loadActiveLessonId() ?? '').id
-  );
+  const [activeLessonId, setActiveLessonId] = useState(initialLessonId);
 
   const currentLesson = useMemo(() => getLessonById(activeLessonId), [activeLessonId]);
   const currentSection = useMemo(
@@ -142,8 +153,9 @@ export default function App({ initialTheme }: { initialTheme: 'dark' | 'light' }
     saveCollapsedSections(next);
   }, [collapsedSections]);
 
+  /** Opens a lesson. `fromHistory` means the URL already points at it (Back/Forward). */
   const selectLesson = useCallback(
-    (lessonId: string) => {
+    (lessonId: string, fromHistory = false) => {
       if (lessonId === activeLessonId) return;
       const lesson = getLessonById(lessonId);
       if (lesson.sectionId !== currentLesson.sectionId) {
@@ -151,6 +163,7 @@ export default function App({ initialTheme }: { initialTheme: 'dark' | 'light' }
       }
       setActiveLessonId(lesson.id);
       saveActiveLessonId(lesson.id);
+      if (!fromHistory) pushLessonUrl(lesson.id);
       const nextTabs = loadLessonTabs(lesson.id, lesson.starterCode);
       updateTabs(nextTabs);
       openTab(nextTabs[0]);
@@ -158,6 +171,17 @@ export default function App({ initialTheme }: { initialTheme: 'dark' | 'light' }
     },
     [activeLessonId, currentLesson.sectionId, openTab, setSectionCollapsed, updateTabs]
   );
+
+  // Browser Back/Forward changes the URL; open the lesson it now names.
+  useEffect(() => {
+    const onPopState = () => {
+      const lessonId = lessonIdFromUrl();
+      if (lessonId) selectLesson(lessonId, true);
+      else showLessonInUrl(activeLessonId);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [activeLessonId, selectLesson]);
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 
