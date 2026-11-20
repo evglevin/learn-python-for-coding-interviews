@@ -332,7 +332,6 @@ export default function App() {
               solvedIds={solvedIds}
               onSelectLesson={selectLesson}
               onResetProgress={handleResetProgress}
-              onClose={handleToggleSidebar}
               width={sidebarWidth}
             />
             <ResizeGutter onMouseDown={handleSidebarDrag} title="Drag to resize sidebar" />

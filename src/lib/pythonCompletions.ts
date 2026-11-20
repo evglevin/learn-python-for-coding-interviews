@@ -662,7 +662,7 @@ export function pythonCompletionSource(
       const userFn = analyzed.userFunctions.get(name);
       options.push({
         label: name,
-        type: userFn ? 'function' : 'variable',
+        type: userFn ? 'function' : moduleMembers(name) ? 'namespace' : 'variable',
         detail: userFn ? userFn.detail : inferred,
         boost: 3,
       });

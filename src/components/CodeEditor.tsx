@@ -111,8 +111,56 @@ const lightHighlightStyle = HighlightStyle.define([
   { tag: t.invalid, color: '#dc2626' },
 ]);
 
+const MONO_FONT =
+  'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace';
+
+/** 16×16 stroke icons in the spirit of VS Code's codicons, used as CSS masks. */
+const COMPLETION_ICON_SVGS: Record<string, string> = {
+  method:
+    '<path d="M8 1.6l5.6 3.1v6.6L8 14.4l-5.6-3.1V4.7z"/><path d="M2.6 4.8L8 7.9l5.4-3.1M8 7.9v6.3"/>',
+  variable:
+    '<path d="M4 3.5H2.5v9H4M12 3.5h1.5v9H12"/><path d="M5 10l1.6-4h4.4L9.4 10z"/>',
+  namespace:
+    '<path d="M5.5 2.5c-1.4 0-2 .6-2 2v1.6c0 1-.5 1.9-1.5 1.9 1 0 1.5.9 1.5 1.9v1.6c0 1.4.6 2 2 2M10.5 2.5c1.4 0 2 .6 2 2v1.6c0 1 .5 1.9 1.5 1.9-1 0-1.5.9-1.5 1.9v1.6c0 1.4-.6 2-2 2"/>',
+  class:
+    '<path d="M2.5 5.5h4v4h-4zM10.5 2.5h3v3h-3zM10.5 10.5h3v3h-3z"/><path d="M6.5 7.5h2.5M9 4v8M9 4h1.5M9 12h1.5"/>',
+  keyword: '<path d="M2 4.5h7M11 4.5h3M2 8h3M7 8h7M2 11.5h12"/>',
+  constant:
+    '<rect x="2.5" y="3.5" width="11" height="9" rx="1"/><path d="M5.5 7h5M5.5 9.5h5"/>',
+  property:
+    '<path d="M10 2.5a3.5 3.5 0 1 1-1.3 6.8L4 14H2v-2l4.7-4.7A3.5 3.5 0 0 1 10 2.5z"/>',
+};
+
+function svgMask(inner: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+function completionIconStyles(isDark: boolean) {
+  const colors: Record<string, string> = isDark
+    ? { method: '#b180d7', variable: '#75beff', namespace: '#c5c5c5', class: '#ee9d28', keyword: '#c5c5c5', constant: '#75beff', property: '#75beff' }
+    : { method: '#652d90', variable: '#007acc', namespace: '#424242', class: '#d67e00', keyword: '#424242', constant: '#007acc', property: '#007acc' };
+  const aliases: Record<string, string[]> = {
+    method: ['method', 'function'],
+    variable: ['variable'],
+    namespace: ['namespace'],
+    class: ['class', 'type'],
+    keyword: ['keyword', 'text'],
+    constant: ['constant', 'enum'],
+    property: ['property'],
+  };
+  const styles: Record<string, Record<string, string>> = {};
+  for (const [icon, types] of Object.entries(aliases)) {
+    const selector = types.map((t) => `.cm-completionIcon-${t}`).join(', ');
+    const mask = svgMask(COMPLETION_ICON_SVGS[icon]);
+    styles[selector] = { backgroundColor: colors[icon], maskImage: mask, WebkitMaskImage: mask };
+  }
+  return styles;
+}
+
 function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
   const isDark = theme === 'dark';
+  const completionRowHeight = Math.round(fontSize * 1.7);
   return EditorView.theme(
     {
       '&': {
@@ -165,38 +213,82 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
         overflow: 'hidden',
         zIndex: '100',
       },
+      // Autocomplete popup styled after VS Code's suggest widget.
+      '.cm-tooltip.cm-tooltip-autocomplete': {
+        backgroundColor: isDark ? '#252526' : '#f8f8f8',
+        border: isDark ? '1px solid #454545' : '1px solid #c8c8c8',
+        borderRadius: '3px',
+        boxShadow: isDark
+          ? '0 2px 8px rgba(0, 0, 0, 0.36)'
+          : '0 2px 8px rgba(0, 0, 0, 0.16)',
+      },
       '.cm-tooltip.cm-tooltip-autocomplete > ul': {
-        fontFamily:
-          'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace',
-        fontSize: '12.5px',
-        maxHeight: '240px',
-        minWidth: '240px',
-        padding: '4px',
+        fontFamily: MONO_FONT,
+        fontSize: `${fontSize}px`,
+        maxHeight: `${completionRowHeight * 12}px`,
+        minWidth: '260px',
+        maxWidth: '520px',
+        padding: '0',
       },
       '.cm-tooltip-autocomplete ul li': {
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
-        padding: '4px 8px',
-        borderRadius: '5px',
-        color: isDark ? '#e4e4e7' : '#18181b',
+        height: `${completionRowHeight}px`,
+        lineHeight: `${completionRowHeight}px`,
+        padding: '0 10px 0 6px',
+        borderRadius: '0',
+        color: isDark ? '#cccccc' : '#1f1f1f',
       },
-      '.cm-tooltip-autocomplete ul li[aria-selected]': {
-        backgroundColor: isDark ? 'rgba(99, 102, 241, 0.30)' : 'rgba(99, 102, 241, 0.14)',
-        color: isDark ? '#ffffff' : '#1e1b4b',
+      '.cm-tooltip-autocomplete ul li:hover': {
+        backgroundColor: isDark ? '#2a2d2e' : '#ececec',
       },
-      '.cm-completionDetail': {
-        marginLeft: 'auto',
-        paddingLeft: '14px',
-        fontStyle: 'normal',
-        fontSize: '11.5px',
-        opacity: '0.65',
+      '.cm-tooltip-autocomplete ul li[aria-selected], .cm-tooltip-autocomplete-disabled ul li[aria-selected]': {
+        backgroundColor: isDark ? '#04395e' : '#d6ebff',
+        color: isDark ? '#ffffff' : '#000000',
+      },
+      '.cm-completionLabel': {
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
       },
       '.cm-completionMatchedText': {
         textDecoration: 'none',
         fontWeight: '700',
-        color: isDark ? '#a5b4fc' : '#4f46e5',
+        color: isDark ? '#2aaaff' : '#0066bf',
       },
+      // Like VS Code, only the focused row shows its detail.
+      '.cm-completionDetail': {
+        display: 'none',
+        marginLeft: 'auto',
+        paddingLeft: '16px',
+        fontStyle: 'normal',
+        fontSize: '0.9em',
+        whiteSpace: 'nowrap',
+        color: isDark ? '#9d9d9d' : '#616161',
+      },
+      'li[aria-selected] .cm-completionDetail': {
+        display: 'inline',
+      },
+      '.cm-completionIcon': {
+        flexShrink: '0',
+        width: '16px',
+        height: '16px',
+        padding: '0',
+        opacity: '1',
+        boxSizing: 'border-box',
+        backgroundColor: isDark ? '#c5c5c5' : '#424242',
+        maskRepeat: 'no-repeat',
+        maskPosition: 'center',
+        maskSize: '16px 16px',
+        WebkitMaskRepeat: 'no-repeat',
+        WebkitMaskPosition: 'center',
+        WebkitMaskSize: '16px 16px',
+      },
+      '.cm-completionIcon::after': {
+        content: 'none',
+      },
+      ...completionIconStyles(isDark),
       '.cm-tooltip.cm-completionInfo': {
         padding: '8px 10px',
         fontSize: '12px',

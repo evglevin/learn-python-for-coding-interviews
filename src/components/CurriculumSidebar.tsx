@@ -3,7 +3,6 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  PanelLeftClose,
   Search,
   Trash2,
 } from 'lucide-react';
@@ -16,7 +15,6 @@ interface CurriculumSidebarProps {
   solvedIds: Set<string>;
   onSelectLesson: (lessonId: string) => void;
   onResetProgress: () => void;
-  onClose: () => void;
   width: number;
 }
 
@@ -27,7 +25,6 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
   solvedIds,
   onSelectLesson,
   onResetProgress,
-  onClose,
   width,
 }: CurriculumSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -119,14 +116,6 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
               {solvedCount} of {totalCount} solved ({progressPct}%)
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
-            title="Collapse sidebar"
-          >
-            <PanelLeftClose className="h-4 w-4" />
-          </button>
         </div>
 
         {/* Progress Bar */}

@@ -10,7 +10,6 @@ import {
   Play,
   Pause,
   RotateCcw,
-  Terminal,
 } from 'lucide-react';
 import type { Section } from '../types/course';
 
@@ -81,27 +80,20 @@ export const TopBar = React.memo(function TopBar({
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="mr-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-500 transition-colors hover:bg-emerald-500/25 cursor-pointer"
-          title={sidebarOpen ? 'Hide lessons sidebar' : 'Show lessons sidebar'}
-        >
-          <Terminal className="h-4 w-4" />
-        </button>
-
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-hover)] cursor-pointer ${
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer ${
             sidebarOpen ? 'bg-[var(--bg-elevated)]' : ''
           }`}
           title={sidebarOpen ? 'Hide lessons sidebar' : 'Show lessons sidebar'}
         >
           {sidebarOpen ? (
-            <PanelLeftClose className="h-4 w-4 text-[var(--text-muted)]" />
+            <PanelLeftClose className="h-4 w-4" />
           ) : (
-            <PanelLeft className="h-4 w-4 text-[var(--text-muted)]" />
+            <PanelLeft className="h-4 w-4" />
           )}
-          <span className="truncate">Python for Coding Interviews</span>
         </button>
+        <span className="truncate px-1 text-sm font-medium text-[var(--text-primary)]">
+          Python for Coding Interviews
+        </span>
 
         <div className="flex items-center gap-0.5">
           <button
