@@ -31,7 +31,7 @@ print(heap[0])  # 1 (smallest element is always at index 0)`,
       functions: [
         {
           signature: 'heap_push(heap: List[int], value: int) -> int',
-          description: 'Pushes `value` onto the min-heap `heap` and returns the **minimum element** currently in the heap (`heap[0]`).',
+          description: 'Pushes `value` onto the min-heap `heap` and returns the **minimum element** currently in the heap.',
         },
       ],
     },
@@ -397,7 +397,7 @@ second  = -heapq.heappop(max_heap)   # 4`,
       functions: [
         {
           signature: 'get_reverse_sorted(nums: List[int]) -> List[int]',
-          description: 'Builds a max-heap from `nums` by negating values, then pops all elements out (negating them back) to return `nums` sorted in **descending** order.',
+          description: 'Builds a max-heap from `nums`, then pops every element out to return `nums` sorted in **descending** order. The returned values must be the original numbers.',
         },
       ],
     },
@@ -497,7 +497,7 @@ while tasks:
       functions: [
         {
           signature: 'get_reverse_sorted(nums: List[int]) -> List[int]',
-          description: 'Uses a heap of tuples `(-abs(num), num)` to return `nums` sorted by **absolute value in descending order**. Break ties in absolute value by placing the smaller actual number first (e.g., `-4` before `4`, matching Python’s tuple ordering `(-abs(num), num)`).',
+          description: 'Returns `nums` sorted by **absolute value in descending order**. Break ties in absolute value by placing the smaller actual number first (e.g., `-4` before `4`).',
         },
       ],
     },

@@ -289,7 +289,7 @@ print(c1 + c2)         # Counter({'b': 2, 'c': 2, 'a': 1, 'd': 1})`,
         },
         {
           signature: 'top_k_frequent(nums: List[int], k: int) -> List[int]',
-          description: 'Returns a list of the `k` most frequent distinct integers in `nums` (or all of them, if there are fewer than `k`), ordered from most frequent to least frequent. Ties keep the order in which the numbers first appear in `nums` (this is exactly how `most_common` orders equal counts).',
+          description: 'Returns a list of the `k` most frequent distinct integers in `nums` (or all of them, if there are fewer than `k`), ordered from most frequent to least frequent. Ties keep the order in which the numbers first appear in `nums`.',
         },
       ],
     },

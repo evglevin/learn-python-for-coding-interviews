@@ -539,11 +539,11 @@ if 0 <= row < ROWS and 0 <= col < COLS:
       functions: [
         {
           signature: 'is_arr_valid(names: List[str], max_length: int) -> bool',
-          description: 'Returns `True` if `names` is non-empty AND its length is at most `max_length` (i.e., `0 < len(names) <= max_length`), else `False`.',
+          description: 'Returns `True` if `names` is non-empty and contains at most `max_length` elements, else `False`.',
         },
         {
           signature: 'in_bounds(r: int, c: int, rows: int, cols: int) -> bool',
-          description: 'Returns `True` if `(r, c)` is a valid cell inside a `rows x cols` grid (`0 <= r < rows` and `0 <= c < cols`), else `False`.',
+          description: 'Returns `True` if `(r, c)` is a valid cell inside a `rows x cols` grid (rows and columns are 0-indexed), else `False`.',
         },
       ],
     },
