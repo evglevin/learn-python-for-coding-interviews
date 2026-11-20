@@ -88,7 +88,7 @@ export const LessonPane = React.memo(function LessonPane({
     >
       {/* Top Tabs: Question | Solution | Hints */}
       <div
-        className="flex shrink-0 items-center border-b px-2"
+        className="flex shrink-0 items-center overflow-x-auto border-b px-1 md:px-2"
         style={{ borderColor: 'var(--border-subtle)' }}
       >
         {(
@@ -104,13 +104,13 @@ export const LessonPane = React.memo(function LessonPane({
             icon={tab.icon}
             label={tab.label}
             onClick={() => setActiveTab(tab.id)}
-            padding="px-3.5 py-2.5"
+            padding="shrink-0 px-3 py-2.5 md:px-3.5"
           />
         ))}
       </div>
 
       {/* Scrollable Content */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-5">
         {activeTab === 'question' && (
           <div className="space-y-4 text-[14.5px] leading-relaxed text-[var(--text-secondary)]">
             {/* Title + Solved Badge */}

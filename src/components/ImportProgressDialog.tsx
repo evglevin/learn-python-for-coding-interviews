@@ -96,7 +96,7 @@ export function ImportProgressDialog({ incoming, currentSolvedCount, onClose }: 
       className="m-auto w-[min(480px,calc(100vw-32px))] rounded-xl border p-0 text-[var(--text-primary)] shadow-2xl backdrop:bg-black/50"
       style={{ backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-subtle)' }}
     >
-      <div className="p-6">{content}</div>
+      <div className="p-5 sm:p-6">{content}</div>
     </dialog>
   );
 }

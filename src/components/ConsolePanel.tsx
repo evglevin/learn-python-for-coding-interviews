@@ -19,7 +19,7 @@ interface ConsolePanelProps {
   isOpen: boolean;
   onToggleOpen: () => void;
   height: number;
-  onResizeStart: (e: React.MouseEvent) => void;
+  onResizeStart: (e: React.PointerEvent) => void;
   result: RunResult | null;
   runtimeStatus: RuntimeStatus;
   onRun: () => void;
@@ -83,8 +83,8 @@ export const ConsolePanel = React.memo(function ConsolePanel({
         >
           {/* Top Drag Handle */}
           <div
-            onMouseDown={onResizeStart}
-            className="absolute -top-1 right-0 left-0 z-10 h-2 cursor-row-resize transition-colors hover:bg-accent/40"
+            onPointerDown={onResizeStart}
+            className="absolute -top-1.5 right-0 left-0 z-10 h-3 cursor-row-resize touch-none transition-colors hover:bg-accent/40 md:-top-1 md:h-2"
             title="Drag to resize console"
           />
 
@@ -131,8 +131,8 @@ export const ConsolePanel = React.memo(function ConsolePanel({
           <div className="min-h-0 flex-1 overflow-y-auto p-3.5 text-sm">
             {!result ? (
               <div className="flex h-full flex-col items-center justify-center gap-1.5 text-center text-xs text-[var(--text-muted)]">
-                <p>Click <strong className="text-[var(--text-secondary)]">Run</strong> (<kbd className="rounded border border-[var(--border-strong)] px-1 py-0.5 font-mono text-[10px]">⌘/Ctrl + Enter</kbd>) to execute your Python code,</p>
-                <p>or <strong className="text-[var(--text-secondary)]">Submit</strong> (<kbd className="rounded border border-[var(--border-strong)] px-1 py-0.5 font-mono text-[10px]">⌘/Ctrl + Shift + Enter</kbd>) to run all test cases.</p>
+                <p>Click <strong className="text-[var(--text-secondary)]">Run</strong><span className="hidden md:inline"> (<kbd className="rounded border border-[var(--border-strong)] px-1 py-0.5 font-mono text-[10px]">⌘/Ctrl + Enter</kbd>)</span> to execute your Python code,</p>
+                <p>or <strong className="text-[var(--text-secondary)]">Submit</strong><span className="hidden md:inline"> (<kbd className="rounded border border-[var(--border-strong)] px-1 py-0.5 font-mono text-[10px]">⌘/Ctrl + Shift + Enter</kbd>)</span> to run all test cases.</p>
               </div>
             ) : activeTab === 'output' ? (
               <div className="space-y-3">
@@ -390,7 +390,7 @@ export const ConsolePanel = React.memo(function ConsolePanel({
 
       {/* Bottom Action Bar */}
       <div
-        className="flex h-12 shrink-0 items-center justify-between border-t px-3.5"
+        className="flex h-12 shrink-0 items-center justify-between border-t px-2 md:px-3.5"
         style={{
           borderColor: 'var(--border-subtle)',
           backgroundColor: 'var(--bg-panel)',

@@ -49,31 +49,42 @@ import { ConsolePanel } from './components/ConsolePanel';
 import { CurriculumSidebar } from './components/CurriculumSidebar';
 import { WelcomeDialog } from './components/WelcomeDialog';
 import { ImportProgressDialog } from './components/ImportProgressDialog';
+import { useIsMobile } from './lib/useIsMobile';
+import { BookOpen, Code2, X } from 'lucide-react';
 
-/** Tracks a mouse drag on window until mouseup, with a resize cursor shown meanwhile. */
+/** Tracks a mouse or touch drag on window until release, with a resize cursor shown meanwhile. */
 function startDrag(
-  e: React.MouseEvent,
+  e: React.PointerEvent,
   cursor: 'col-resize' | 'row-resize',
-  onMove: (ev: MouseEvent) => void
+  onMove: (ev: PointerEvent) => void
 ) {
   e.preventDefault();
-  const onMouseUp = () => {
-    window.removeEventListener('mousemove', onMove);
-    window.removeEventListener('mouseup', onMouseUp);
+  const onPointerUp = () => {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerUp);
     document.body.style.cursor = '';
   };
   document.body.style.cursor = cursor;
-  window.addEventListener('mousemove', onMove);
-  window.addEventListener('mouseup', onMouseUp);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
 }
 
-const ResizeGutter: React.FC<{ onMouseDown: (e: React.MouseEvent) => void; title: string }> = ({
-  onMouseDown,
+type MobileView = 'lesson' | 'code';
+
+/** Tallest the console may grow while leaving the editor room above it. */
+function maxConsoleHeight() {
+  return Math.min(500, Math.max(130, window.innerHeight - 400));
+}
+
+const ResizeGutter: React.FC<{ onPointerDown: (e: React.PointerEvent) => void; title: string }> = ({
+  onPointerDown,
   title,
 }) => (
   <div
-    onMouseDown={onMouseDown}
-    className="group flex w-2.5 shrink-0 cursor-col-resize items-center justify-center"
+    onPointerDown={onPointerDown}
+    className="group flex w-2.5 shrink-0 cursor-col-resize touch-none items-center justify-center"
     title={title}
   >
     <div className="h-10 w-1 rounded-full bg-[var(--border-strong)] transition-colors group-hover:bg-accent" />
@@ -97,6 +108,11 @@ export default function App({
   const [incomingProgress, setIncomingProgress] = useState(initialIncomingProgress);
 
   const [activeLessonId, setActiveLessonId] = useState(initialLessonId);
+
+  // Phone layout: one pane at a time, and the lessons list slides over the content.
+  const isMobile = useIsMobile();
+  const [mobileView, setMobileView] = useState<MobileView>('lesson');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const currentLesson = useMemo(() => getLessonById(activeLessonId), [activeLessonId]);
   const currentSection = useMemo(
@@ -250,6 +266,12 @@ export default function App({
     handleChangeCode(code);
   }, [handleChangeCode]);
 
+  // On a phone the editor is hidden behind the lesson, so show it with the code just loaded.
+  const handleApplySolution = useCallback((code: string) => {
+    handleApplyCode(code);
+    setMobileView('code');
+  }, [handleApplyCode]);
+
   const handleResetCode = useCallback(() => {
     handleApplyCode(currentLesson.starterCode);
   }, [currentLesson.starterCode, handleApplyCode]);
@@ -350,10 +372,37 @@ export default function App({
   }, [fontSize, theme]);
 
   const handleToggleSidebar = useCallback(() => {
+    if (isMobile) {
+      setDrawerOpen((open) => !open);
+      return;
+    }
     const next = !sidebarOpen;
     setSidebarOpen(next);
     saveSidebarOpen(next);
-  }, [sidebarOpen]);
+  }, [isMobile, sidebarOpen]);
+
+  const handleSelectLessonFromSidebar = useCallback((lessonId: string) => {
+    selectLesson(lessonId);
+    if (isMobile) {
+      setDrawerOpen(false);
+      setMobileView('lesson');
+    }
+  }, [isMobile, selectLesson]);
+
+  const handleNextLessonFromConsole = useCallback(() => {
+    goToNext();
+    setMobileView('lesson');
+  }, [goToNext]);
+
+  // Escape closes the lessons drawer.
+  useEffect(() => {
+    if (!isMobile || !drawerOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDrawerOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [drawerOpen, isMobile]);
 
   const handleToggleSection = useCallback((sectionId: string) => {
     setSectionCollapsed(sectionId, !collapsedSections.has(sectionId));
@@ -376,7 +425,7 @@ export default function App({
   const handleToggleConsole = useCallback(() => setConsoleOpen((o) => !o), []);
 
   // Pane resizing
-  const handleSidebarDrag = (e: React.MouseEvent) => {
+  const handleSidebarDrag = (e: React.PointerEvent) => {
     const startX = e.clientX;
     const startWidth = sidebarWidth;
     startDrag(e, 'col-resize', (ev) => {
@@ -384,7 +433,7 @@ export default function App({
     });
   };
 
-  const handleHorizontalDrag = (e: React.MouseEvent) => {
+  const handleHorizontalDrag = (e: React.PointerEvent) => {
     const container = contentSplitRef.current;
     if (!container) return;
     startDrag(e, 'col-resize', (ev) => {
@@ -395,19 +444,39 @@ export default function App({
   };
 
   const handleConsoleDrag = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.PointerEvent) => {
       const startY = e.clientY;
-      const startHeight = consoleHeight;
+      const startHeight = Math.min(consoleHeight, maxConsoleHeight());
       startDrag(e, 'row-resize', (ev) => {
-        setConsoleHeight(Math.min(500, Math.max(130, startHeight + startY - ev.clientY)));
+        setConsoleHeight(
+          Math.min(maxConsoleHeight(), Math.max(130, startHeight + startY - ev.clientY))
+        );
       });
     },
     [consoleHeight]
   );
 
+  const sidebar = (
+    <CurriculumSidebar
+      sections={SECTIONS}
+      lessons={LESSONS}
+      currentLesson={currentLesson}
+      solvedIds={solvedIds}
+      collapsedSections={collapsedSections}
+      onSelectLesson={handleSelectLessonFromSidebar}
+      onToggleSection={handleToggleSection}
+      onResetProgress={handleResetProgress}
+      onSaveProgressLink={handleSaveProgressLink}
+      width={isMobile ? 'min(320px, calc(100vw - 48px))' : sidebarWidth}
+    />
+  );
+
+  const showLessonPane = isMobile ? mobileView === 'lesson' : !editorExpanded;
+  const showCodePane = !isMobile || mobileView === 'code';
+
   return (
     <div
-      className="flex h-screen w-screen flex-col overflow-hidden"
+      className="flex h-dvh w-full flex-col overflow-hidden"
       style={{ backgroundColor: 'var(--bg-canvas)' }}
     >
       <TopBar
@@ -420,30 +489,54 @@ export default function App({
         hasNext={hasNext}
         onPrev={goToPrev}
         onNext={goToNext}
-        sidebarOpen={sidebarOpen}
+        sidebarOpen={isMobile ? drawerOpen : sidebarOpen}
         onToggleSidebar={handleToggleSidebar}
         theme={theme}
         onToggleTheme={handleToggleTheme}
       />
 
+      {/* Phone layout: switch between the lesson and the editor */}
+      {isMobile && (
+        <div className="shrink-0 px-1.5 pt-1.5">
+          <div
+            role="tablist"
+            aria-label="Pane"
+            className="grid grid-cols-2 gap-1 rounded-lg border p-1"
+            style={{ backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-subtle)' }}
+          >
+            {(
+              [
+                { id: 'lesson', label: 'Lesson', Icon: BookOpen },
+                { id: 'code', label: 'Code', Icon: Code2 },
+              ] as const
+            ).map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={mobileView === id}
+                onClick={() => setMobileView(id)}
+                className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[13px] font-medium transition-colors cursor-pointer ${
+                  mobileView === id
+                    ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm'
+                    : 'text-[var(--text-muted)]'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Main Split Workspace */}
-      <main className="flex min-h-0 flex-1 overflow-hidden p-2">
+      <main className="flex min-h-0 flex-1 overflow-hidden p-1.5 md:p-2">
         {/* Collapsible & Resizable Lessons Sidebar */}
-        {sidebarOpen && (
+        {!isMobile && sidebarOpen && (
           <>
-            <CurriculumSidebar
-              sections={SECTIONS}
-              lessons={LESSONS}
-              currentLesson={currentLesson}
-              solvedIds={solvedIds}
-              collapsedSections={collapsedSections}
-              onSelectLesson={selectLesson}
-              onToggleSection={handleToggleSection}
-              onResetProgress={handleResetProgress}
-              onSaveProgressLink={handleSaveProgressLink}
-              width={sidebarWidth}
-            />
-            <ResizeGutter onMouseDown={handleSidebarDrag} title="Drag to resize sidebar" />
+            {sidebar}
+            <ResizeGutter onPointerDown={handleSidebarDrag} title="Drag to resize sidebar" />
           </>
         )}
 
@@ -453,26 +546,30 @@ export default function App({
           className="flex h-full min-w-0 flex-1 overflow-hidden"
         >
           {/* Left Pane: Question / Solution / Hints, plus resizable gutter */}
-          {!editorExpanded && (
+          {showLessonPane && (
             <>
               <div
                 className="h-full min-w-0 shrink-0"
-                style={{ width: `${leftWidthPct}%` }}
+                style={{ width: isMobile ? '100%' : `${leftWidthPct}%` }}
               >
                 <LessonPane
                   key={currentLesson.id}
                   lesson={currentLesson}
                   isSolved={solvedIds.has(currentLesson.id)}
-                  onApplySolution={handleApplyCode}
+                  onApplySolution={handleApplySolution}
                 />
               </div>
-              <ResizeGutter onMouseDown={handleHorizontalDrag} title="Drag to resize panes" />
+              {!isMobile && (
+                <ResizeGutter onPointerDown={handleHorizontalDrag} title="Drag to resize panes" />
+              )}
             </>
           )}
 
-          {/* Right Pane: Code Editor + Console */}
+          {/* Right Pane: Code Editor + Console. Hidden, not unmounted, so the editor keeps its state. */}
           <div
-            className="flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-lg border"
+            className={`h-full min-w-0 flex-1 flex-col overflow-hidden rounded-lg border ${
+              showCodePane ? 'flex' : 'hidden'
+            }`}
             style={{
               backgroundColor: 'var(--bg-panel)',
               borderColor: 'var(--border-subtle)',
@@ -498,13 +595,14 @@ export default function App({
                 runtimeError={runtimeError}
                 isExpanded={editorExpanded}
                 onToggleExpand={handleToggleExpand}
+                canExpand={!isMobile}
               />
             </div>
 
             <ConsolePanel
               isOpen={consoleOpen}
               onToggleOpen={handleToggleConsole}
-              height={consoleHeight}
+              height={isMobile ? Math.min(consoleHeight, maxConsoleHeight()) : consoleHeight}
               onResizeStart={handleConsoleDrag}
               result={runResult}
               runtimeStatus={runtimeStatus}
@@ -512,11 +610,33 @@ export default function App({
               onSubmit={handleSubmit}
               onStop={handleStop}
               hasNextLesson={hasNext}
-              onNextLesson={goToNext}
+              onNextLesson={handleNextLessonFromConsole}
             />
           </div>
         </div>
       </main>
+
+      {/* Phone layout: lessons list as a slide-over drawer */}
+      {isMobile && drawerOpen && (
+        <div className="fixed inset-0 z-40">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setDrawerOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="absolute inset-y-0 left-0 flex p-1.5">
+            {sidebar}
+          </div>
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(false)}
+            className="absolute top-2.5 right-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white cursor-pointer"
+            aria-label="Close lessons"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {incomingProgress ? (
         <ImportProgressDialog

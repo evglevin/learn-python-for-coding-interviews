@@ -89,7 +89,7 @@ export const TopBar = React.memo(function TopBar({
   return (
     <header
       ref={attachHeader}
-      className="flex h-11 shrink-0 items-center justify-between border-b px-3 select-none"
+      className="flex h-11 shrink-0 items-center justify-between gap-2 border-b px-2 select-none md:px-3"
       style={{
         backgroundColor: 'var(--bg-topbar)',
         borderColor: 'var(--border-subtle)',
@@ -111,13 +111,13 @@ export const TopBar = React.memo(function TopBar({
             <PanelLeft className="h-4 w-4" />
           )}
         </button>
-        <span className="truncate px-1 text-sm font-medium text-[var(--text-primary)]">
+        <span className="hidden truncate px-1 text-sm font-medium text-[var(--text-primary)] sm:inline">
           Python for Coding Interviews
         </span>
 
         {!sidebarOpen && (
           <>
-            <div className="flex items-center gap-0.5">
+            <div className="flex shrink-0 items-center gap-0.5">
               <button
                 type="button"
                 onClick={onPrev}
@@ -138,11 +138,11 @@ export const TopBar = React.memo(function TopBar({
               </button>
             </div>
 
-            <div className="ml-1 hidden items-center gap-1.5 text-xs sm:flex">
-              <span className="font-medium text-[var(--text-secondary)]">
+            <div className="ml-1 flex min-w-0 items-center gap-1.5 text-xs">
+              <span className="truncate font-medium text-[var(--text-secondary)]">
                 {section.shortTitle}
               </span>
-              <span className="text-[var(--text-muted)]">
+              <span className="shrink-0 text-[var(--text-muted)]">
                 ({positionInSection} / {sectionTotal})
               </span>
             </div>
@@ -151,7 +151,7 @@ export const TopBar = React.memo(function TopBar({
       </div>
 
       {/* Right Utility Cluster */}
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         {/* Stopwatch Timer */}
         {timerOpen ? (
           <div
@@ -229,7 +229,7 @@ export const TopBar = React.memo(function TopBar({
           href={REPO_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
+          className="hidden h-8 w-8 items-center justify-center rounded-md text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] sm:flex"
           title="View source code on GitHub"
           aria-label="View source code on GitHub"
         >
@@ -240,7 +240,7 @@ export const TopBar = React.memo(function TopBar({
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
+          className="flex items-center gap-2 rounded-full border px-1.5 py-1 text-xs font-medium sm:px-2.5 transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
           style={{
             borderColor: 'var(--border-subtle)',
             backgroundColor: 'var(--bg-elevated)',

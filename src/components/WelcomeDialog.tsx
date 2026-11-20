@@ -38,9 +38,11 @@ export function WelcomeDialog({ totalLessons, totalSections, onClose }: WelcomeD
       title: 'Run and submit',
       body: (
         <>
-          <strong>Run</strong> (<Kbd>{MOD} + Enter</Kbd>) runs your code and compares its output
-          to the expected output. <strong>Submit</strong> (<Kbd>{MOD} + Shift + Enter</Kbd>) runs
-          the tests and marks the lesson solved when they all pass.
+          <strong>Run</strong>
+          <span className="hidden md:inline"> (<Kbd>{MOD} + Enter</Kbd>)</span> runs your code and
+          compares its output to the expected output. <strong>Submit</strong>
+          <span className="hidden md:inline"> (<Kbd>{MOD} + Shift + Enter</Kbd>)</span> runs the
+          tests and marks the lesson solved when they all pass.
         </>
       ),
     },
@@ -63,7 +65,7 @@ export function WelcomeDialog({ totalLessons, totalSections, onClose }: WelcomeD
       className="m-auto w-[min(480px,calc(100vw-32px))] rounded-xl border p-0 text-[var(--text-primary)] shadow-2xl backdrop:bg-black/50"
       style={{ backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-subtle)' }}
     >
-      <div className="p-6">
+      <div className="p-5 sm:p-6">
         <h2 id="welcome-title" className="text-lg font-semibold">
           Welcome to Python for Coding Interviews
         </h2>

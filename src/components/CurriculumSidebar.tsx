@@ -20,7 +20,8 @@ interface CurriculumSidebarProps {
   onResetProgress: () => void;
   /** Copies a link carrying the learner's progress; rejects if the clipboard refuses. */
   onSaveProgressLink: () => Promise<void>;
-  width: number;
+  /** Pixels, or any CSS width (the phone drawer passes one). */
+  width: number | string;
 }
 
 function scrollActiveLessonIntoView(item: HTMLButtonElement | null) {
@@ -96,7 +97,7 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
     <aside
       className="flex h-full shrink-0 flex-col overflow-hidden rounded-lg border select-none"
       style={{
-        width: `${width}px`,
+        width,
         backgroundColor: 'var(--bg-panel)',
         borderColor: 'var(--border-subtle)',
       }}
@@ -136,7 +137,7 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Filter lessons..."
-            className="w-full rounded-md border py-1.5 pr-2.5 pl-8 text-xs outline-none transition-colors focus:border-accent"
+            className="w-full rounded-md border py-1.5 pr-2.5 pl-8 text-base outline-none md:text-xs transition-colors focus:border-accent"
             style={{
               backgroundColor: 'var(--bg-code)',
               borderColor: 'var(--border-subtle)',
@@ -229,7 +230,7 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
                             ref={isCurrent ? scrollActiveLessonIntoView : undefined}
                             type="button"
                             onClick={() => onSelectLesson(lesson.id)}
-                            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors cursor-pointer ${
+                            className={`flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm md:py-1.5 md:text-[13px] transition-colors cursor-pointer ${
                               isCurrent
                                 ? 'ring-1 ring-inset ring-accent/60 font-semibold text-[var(--text-primary)]'
                                 : 'font-normal text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'

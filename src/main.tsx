@@ -10,6 +10,14 @@ import { loadActiveLessonId, loadTheme, saveActiveLessonId } from './lib/storage
 // Read before anything else rewrites the URL; the payload is stripped so a reload doesn't ask again.
 const progressData = takeProgressFromUrl();
 
+// iOS Safari zooms in when focusing text under 16px, like the code editor. maximum-scale stops
+// that there while still allowing pinch zoom (Android would block pinch zoom, so it's iOS only).
+if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+  document
+    .querySelector('meta[name="viewport"]')
+    ?.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0');
+}
+
 const initialTheme = loadTheme();
 document.documentElement.classList.toggle('dark', initialTheme === 'dark');
 

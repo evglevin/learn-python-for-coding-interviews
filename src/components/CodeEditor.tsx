@@ -78,6 +78,8 @@ interface CodeEditorProps {
   runtimeStatus: RuntimeStatus;
   runtimeError?: string;
   isExpanded: boolean;
+  /** False on phones, where the editor already fills the screen. */
+  canExpand: boolean;
   onToggleExpand: () => void;
 }
 
@@ -356,6 +358,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   runtimeError,
   isExpanded,
   onToggleExpand,
+  canExpand,
 }) => {
   const initialSettings = useRef({ code: initialCode, theme, fontSize });
   const callbacks = useRef({ onChangeCode, onRun, onSubmit });
@@ -481,31 +484,31 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     <div className="flex h-full min-h-0 flex-col">
       {/* Top Editor Toolbar */}
       <div
-        className="flex shrink-0 items-center justify-between border-b px-3 py-1.5"
+        className="flex shrink-0 items-center justify-between gap-2 border-b px-2 py-1.5 md:px-3"
         style={{
           borderColor: 'var(--border-subtle)',
           backgroundColor: 'var(--bg-panel)',
         }}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-primary)]">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-[var(--text-primary)]">
             <span>Python 3</span>
           </div>
 
-          <span className="h-3.5 w-px bg-[var(--border-subtle)]" />
+          <span className="h-3.5 w-px shrink-0 bg-[var(--border-subtle)]" />
 
           {/* Runtime status indicator */}
           <div
-            className="flex items-center gap-1.5 text-xs"
+            className="flex min-w-0 items-center gap-1.5 text-xs"
             title={runtimeError || 'In-browser Python WebAssembly (Pyodide)'}
           >
-            <status.Icon className={`h-3.5 w-3.5 ${status.iconClass}`} />
-            <span className={status.labelClass}>{status.label}</span>
+            <status.Icon className={`h-3.5 w-3.5 shrink-0 ${status.iconClass}`} />
+            <span className={`truncate ${status.labelClass}`}>{status.label}</span>
           </div>
         </div>
 
         {/* Right Toolbar Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           <div
             className="mr-1 flex items-center rounded border px-1 py-0.5 text-xs"
             style={{ borderColor: 'var(--border-subtle)' }}
@@ -513,7 +516,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             <button
               type="button"
               onClick={() => onChangeFontSize(Math.max(FONT_SIZE_MIN, fontSize - 1))}
-              className="rounded p-0.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
+              className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer md:p-0.5"
               title="Decrease font size"
             >
               <Minus className="h-3 w-3" />
@@ -524,7 +527,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             <button
               type="button"
               onClick={() => onChangeFontSize(Math.min(FONT_SIZE_MAX, fontSize + 1))}
-              className="rounded p-0.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
+              className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer md:p-0.5"
               title="Increase font size"
             >
               <Plus className="h-3 w-3" />
@@ -540,37 +543,39 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             <RotateCcw className="h-3.5 w-3.5" />
           </button>
 
-          <button
-            type="button"
-            onClick={onToggleExpand}
-            className="rounded p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
-            title={isExpanded ? 'Restore split view' : 'Maximize editor pane'}
-          >
-            {isExpanded ? (
-              <Minimize2 className="h-3.5 w-3.5" />
-            ) : (
-              <Maximize2 className="h-3.5 w-3.5" />
-            )}
-          </button>
+          {canExpand && (
+            <button
+              type="button"
+              onClick={onToggleExpand}
+              className="rounded p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
+              title={isExpanded ? 'Restore split view' : 'Maximize editor pane'}
+            >
+              {isExpanded ? (
+                <Minimize2 className="h-3.5 w-3.5" />
+              ) : (
+                <Maximize2 className="h-3.5 w-3.5" />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
       {/* Solution Tabs Bar */}
       <div
-        className="flex shrink-0 items-center justify-between border-b px-2 py-1"
+        className="flex shrink-0 items-center justify-between gap-2 border-b px-2 py-1"
         style={{
           borderColor: 'var(--border-subtle)',
           backgroundColor: 'var(--bg-panel)',
         }}
       >
-        <div className="flex items-center gap-1 overflow-x-auto">
+        <div className="flex min-w-0 items-center gap-1 overflow-x-auto">
           {tabs.map((tab) => {
             const isActive = tab.id === activeTabId;
             return (
               <div
                 key={tab.id}
                 onClick={() => onSelectTab(tab.id)}
-                className={`group flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                className={`group flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
                   isActive
                     ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)]'
                     : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]'
@@ -597,7 +602,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             <button
               type="button"
               onClick={onAddTab}
-              className="rounded p-1 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
+              className="shrink-0 rounded p-1 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
               title="Add new scratchpad tab"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -605,7 +610,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           )}
         </div>
 
-        <div className="shrink-0 pr-2 font-mono text-[11px] text-[var(--text-muted)]">
+        <div className="hidden shrink-0 pr-2 font-mono text-[11px] text-[var(--text-muted)] sm:block">
           Ln {cursorPos.line}, Col {cursorPos.col}
         </div>
       </div>
