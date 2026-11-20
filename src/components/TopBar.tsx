@@ -10,6 +10,7 @@ import {
   Play,
   Pause,
   RotateCcw,
+  Github,
 } from 'lucide-react';
 import type { Section } from '../types/course';
 
@@ -28,6 +29,8 @@ interface TopBarProps {
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
 }
+
+const REPO_URL = 'https://github.com/evglevin/learn-python-for-coding-interviews';
 
 function formatSeconds(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60);
@@ -199,6 +202,18 @@ export const TopBar = React.memo(function TopBar({
             <Moon className="h-4 w-4" />
           )}
         </button>
+
+        {/* Source Code Repository Link */}
+        <a
+          href={REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
+          title="View source code on GitHub"
+          aria-label="View source code on GitHub"
+        >
+          <Github className="h-4 w-4" aria-hidden="true" />
+        </a>
 
         {/* Progress Ring Button */}
         <button
