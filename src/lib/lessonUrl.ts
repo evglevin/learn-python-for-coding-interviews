@@ -16,7 +16,7 @@ export function lessonIdFromUrl(): string | null {
   return LESSONS.some((l) => l.id === id) ? id : null;
 }
 
-function lessonPath(lessonId: string): string {
+export function lessonPath(lessonId: string): string {
   return LESSON_PATH_PREFIX + encodeURIComponent(lessonId);
 }
 

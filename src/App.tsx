@@ -21,9 +21,11 @@ import {
   loadCollapsedSections,
   loadFontSize,
   loadLessonTabs,
+  loadProgress,
   loadSidebarOpen,
   loadSolvedIds,
   loadWelcomeSeen,
+  replaceProgress,
   saveActiveLessonId,
   saveCollapsedSections,
   saveFontSize,
@@ -34,12 +36,19 @@ import {
   saveWelcomeSeen,
 } from './lib/storage';
 import { lessonIdFromUrl, pushLessonUrl, showLessonInUrl } from './lib/lessonUrl';
+import {
+  copyProgressLink,
+  decodeProgress,
+  takeProgressFromUrl,
+  type IncomingProgress,
+} from './lib/progressLink';
 import { TopBar } from './components/TopBar';
 import { LessonPane } from './components/LessonPane';
 import { CodeEditor, type CodeEditorHandle } from './components/CodeEditor';
 import { ConsolePanel } from './components/ConsolePanel';
 import { CurriculumSidebar } from './components/CurriculumSidebar';
 import { WelcomeDialog } from './components/WelcomeDialog';
+import { ImportProgressDialog } from './components/ImportProgressDialog';
 
 /** Tracks a mouse drag on window until mouseup, with a resize cursor shown meanwhile. */
 function startDrag(
@@ -74,14 +83,18 @@ const ResizeGutter: React.FC<{ onMouseDown: (e: React.MouseEvent) => void; title
 export default function App({
   initialTheme,
   initialLessonId,
+  incomingProgress: initialIncomingProgress,
 }: {
   initialTheme: 'dark' | 'light';
   initialLessonId: string;
+  /** Progress from a link the page was opened with, awaiting the learner's decision. */
+  incomingProgress: IncomingProgress | null;
 }) {
   const [theme, setTheme] = useState(initialTheme);
   const [fontSize, setFontSize] = useState<number>(() => loadFontSize());
   const [solvedIds, setSolvedIds] = useState<Set<string>>(() => loadSolvedIds());
   const [showWelcome, setShowWelcome] = useState<boolean>(() => !loadWelcomeSeen());
+  const [incomingProgress, setIncomingProgress] = useState(initialIncomingProgress);
 
   const [activeLessonId, setActiveLessonId] = useState(initialLessonId);
 
@@ -182,6 +195,16 @@ export default function App({
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, [activeLessonId, selectLesson]);
+
+  // A progress link for the lesson that is already open changes only the URL fragment.
+  useEffect(() => {
+    const onHashChange = () => {
+      const data = takeProgressFromUrl();
+      if (data !== null) void decodeProgress(data).then(setIncomingProgress);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 
@@ -292,6 +315,33 @@ export default function App({
     setRunResult(null);
   }, [activeTabId, currentLesson.starterCode, openTab, updateTabs]);
 
+  const handleSaveProgressLink = useCallback(
+    () => copyProgressLink(loadProgress(), activeLessonId),
+    [activeLessonId]
+  );
+
+  const handleCloseImportProgress = useCallback(
+    (load: boolean) => {
+      if (load && incomingProgress?.status === 'valid') {
+        const result = replaceProgress(incomingProgress.progress);
+        if (result !== 'saved') {
+          setIncomingProgress({ status: result === 'partial' ? 'savePartial' : 'saveFailed' });
+          return;
+        }
+        setSolvedIds(new Set(incomingProgress.progress.solved));
+        const next = loadLessonTabs(currentLesson.id, currentLesson.starterCode);
+        updateTabs(next);
+        openTab(next[0]);
+        setRunResult(null);
+        // Someone moving their progress over has already used the course.
+        saveWelcomeSeen();
+        setShowWelcome(false);
+      }
+      setIncomingProgress(null);
+    },
+    [currentLesson, incomingProgress, openTab, updateTabs]
+  );
+
   const handleChangeFontSize = useCallback((size: number) => {
     if (size === fontSize) return;
     setFontSize(size);
@@ -390,6 +440,7 @@ export default function App({
               onSelectLesson={selectLesson}
               onToggleSection={handleToggleSection}
               onResetProgress={handleResetProgress}
+              onSaveProgressLink={handleSaveProgressLink}
               width={sidebarWidth}
             />
             <ResizeGutter onMouseDown={handleSidebarDrag} title="Drag to resize sidebar" />
@@ -467,13 +518,24 @@ export default function App({
         </div>
       </main>
 
-      {showWelcome && (
-        <WelcomeDialog
-          totalLessons={LESSONS.length}
-          totalSections={SECTIONS.length}
-          onClose={handleCloseWelcome}
+      {incomingProgress ? (
+        <ImportProgressDialog
+          // A new status needs a new <dialog>: the closed one doesn't reopen itself.
+          key={incomingProgress.status}
+          incoming={incomingProgress}
+          currentSolvedCount={solvedIds.size}
+          onClose={handleCloseImportProgress}
         />
+      ) : (
+        showWelcome && (
+          <WelcomeDialog
+            totalLessons={LESSONS.length}
+            totalSections={SECTIONS.length}
+            onClose={handleCloseWelcome}
+          />
+        )
       )}
+
     </div>
   );
 }

@@ -31,6 +31,7 @@ npm run dev
 - **Full IDE Workspace**:
   - CodeMirror 6 editor with Python syntax highlighting, line numbers, folding, auto-indent, bracket matching, multi-tab scratchpads (`Solution 1`, `+`), font size controls, and dark/light themes.
   - Resizable split-pane layout, collapsible console, interview stopwatch timer, progressive hints, and localStorage persistence.
+  - **Save to Link** (sidebar footer) copies a link that carries your solved lessons and editor code. Open it on another device and confirm to replace the progress there. The data lives in the URL fragment, so it is never sent to a server.
 
 ## Scripts
 

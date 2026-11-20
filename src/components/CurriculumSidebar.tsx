@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Check,
   ChevronDown,
   ChevronRight,
+  Link,
   Search,
   Trash2,
 } from 'lucide-react';
@@ -17,6 +18,8 @@ interface CurriculumSidebarProps {
   onSelectLesson: (lessonId: string) => void;
   onToggleSection: (sectionId: string) => void;
   onResetProgress: () => void;
+  /** Copies a link carrying the learner's progress; rejects if the clipboard refuses. */
+  onSaveProgressLink: () => Promise<void>;
   width: number;
 }
 
@@ -33,10 +36,25 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
   onSelectLesson,
   onToggleSection,
   onResetProgress,
+  onSaveProgressLink,
   width,
 }: CurriculumSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
+  const [linkStatus, setLinkStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const linkStatusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const saveProgressLink = () => {
+    const showStatus = (status: 'copied' | 'failed') => {
+      setLinkStatus(status);
+      if (linkStatusTimer.current !== null) clearTimeout(linkStatusTimer.current);
+      linkStatusTimer.current = setTimeout(() => setLinkStatus('idle'), 2500);
+    };
+    onSaveProgressLink().then(
+      () => showStatus('copied'),
+      () => showStatus('failed')
+    );
+  };
   const query = searchQuery.trim().toLowerCase();
   const isFiltering = query.length > 0;
 
@@ -255,7 +273,7 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
         )}
       </div>
 
-      {/* Footer: Reset Progress */}
+      {/* Footer: Reset Progress + Save to Link */}
       <div
         className="flex shrink-0 items-center justify-between border-t px-3 py-2 text-xs"
         style={{
@@ -287,14 +305,41 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setConfirmReset(true)}
-            className="flex items-center gap-1.5 rounded px-1.5 py-1 text-[11.5px] text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-rose-400 cursor-pointer"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            <span>Reset Progress</span>
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => setConfirmReset(true)}
+              className="flex items-center gap-1.5 rounded px-1.5 py-1 text-[11.5px] text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-rose-400 cursor-pointer"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span>Reset Progress</span>
+            </button>
+            <button
+              type="button"
+              onClick={saveProgressLink}
+              className={`flex items-center gap-1.5 rounded px-1.5 py-1 text-[11.5px] transition-colors hover:bg-[var(--bg-hover)] cursor-pointer ${
+                linkStatus === 'copied'
+                  ? 'text-emerald-500'
+                  : linkStatus === 'failed'
+                  ? 'text-rose-400'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+              }`}
+              title="Copy a link that moves your solved lessons and code to another device"
+            >
+              {linkStatus === 'copied' ? (
+                <Check className="h-3.5 w-3.5" />
+              ) : (
+                <Link className="h-3.5 w-3.5" />
+              )}
+              <span aria-live="polite">
+                {linkStatus === 'copied'
+                  ? 'Link copied'
+                  : linkStatus === 'failed'
+                  ? 'Couldn\u2019t copy'
+                  : 'Save to Link'}
+              </span>
+            </button>
+          </>
         )}
       </div>
     </aside>

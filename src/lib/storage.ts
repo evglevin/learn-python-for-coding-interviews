@@ -26,11 +26,13 @@ function read(key: string): string | null {
   }
 }
 
-function write(key: string, value: string): void {
+/** Returns false when storage refuses the write (quota exceeded, privacy mode). */
+function write(key: string, value: string): boolean {
   try {
     localStorage.setItem(key, value);
+    return true;
   } catch {
-    // ignore quota / privacy-mode errors
+    return false;
   }
 }
 
@@ -71,6 +73,8 @@ export function saveSolvedIds(solved: Set<string>): void {
 
 let tabsCache: Record<string, SolutionTab[]> | null = null;
 let tabsWriteTimer: ReturnType<typeof setTimeout> | null = null;
+/** The in-memory tabs differ from what storage holds. */
+let tabsDirty = false;
 
 function getTabsMap(): Record<string, SolutionTab[]> {
   if (!tabsCache) {
@@ -84,10 +88,14 @@ function getTabsMap(): Record<string, SolutionTab[]> {
 }
 
 function flushTabs(): void {
-  if (tabsWriteTimer === null) return;
-  clearTimeout(tabsWriteTimer);
-  tabsWriteTimer = null;
-  write(STORAGE_KEYS.TABS, JSON.stringify(getTabsMap()));
+  if (tabsWriteTimer !== null) {
+    clearTimeout(tabsWriteTimer);
+    tabsWriteTimer = null;
+  }
+  // A refused write leaves the tabs dirty, so the next edit or page hide retries it.
+  if (tabsDirty && write(STORAGE_KEYS.TABS, JSON.stringify(getTabsMap()))) {
+    tabsDirty = false;
+  }
 }
 
 if (typeof window !== 'undefined') {
@@ -108,6 +116,7 @@ export function loadLessonTabs(lessonId: string, starterCode: string): SolutionT
 
 export function saveLessonTabs(lessonId: string, tabs: SolutionTab[]): void {
   getTabsMap()[lessonId] = tabs;
+  tabsDirty = true;
   if (tabsWriteTimer === null) {
     tabsWriteTimer = setTimeout(flushTabs, TABS_WRITE_DELAY_MS);
   }
@@ -166,12 +175,49 @@ export function saveWelcomeSeen(): void {
   write(STORAGE_KEYS.WELCOME_SEEN, 'true');
 }
 
+/** A learner's progress: the lessons they solved and the editor tabs they wrote. */
+export interface ProgressSnapshot {
+  solved: string[];
+  tabs: Record<string, SolutionTab[]>;
+}
+
+export function loadProgress(): ProgressSnapshot {
+  return { solved: [...loadSolvedIds()], tabs: { ...getTabsMap() } };
+}
+
+/**
+ * Replaces the progress saved in this browser with `progress`, all or nothing:
+ * - `saved`: both parts were written.
+ * - `unchanged`: storage refused the new progress, and the old progress is intact.
+ * - `partial`: storage refused the solved list and then refused restoring the old code,
+ *   so storage holds the new code with the old solved list. Saving again fixes it.
+ */
+export function replaceProgress(progress: ProgressSnapshot): 'saved' | 'unchanged' | 'partial' {
+  // Persist pending edits first, so a refused write below can't lose them.
+  flushTabs();
+  const previousTabs = read(STORAGE_KEYS.TABS);
+  // Overwrite rather than remove-then-write: a refused setItem keeps the old value.
+  if (!write(STORAGE_KEYS.TABS, JSON.stringify(progress.tabs))) return 'unchanged';
+  if (!write(STORAGE_KEYS.SOLVED, JSON.stringify([...new Set(progress.solved)]))) {
+    // Put the old code back, so new code never pairs with the old solved list. It fit
+    // before, so this only fails if another tab took the freed space in the meantime.
+    if (previousTabs === null) remove(STORAGE_KEYS.TABS);
+    else if (!write(STORAGE_KEYS.TABS, previousTabs)) return 'partial';
+    return 'unchanged';
+  }
+  // The imported tabs replace any edits that were still waiting to be saved.
+  tabsCache = { ...progress.tabs };
+  tabsDirty = false;
+  return 'saved';
+}
+
 export function clearAllProgress(): void {
   if (tabsWriteTimer !== null) {
     clearTimeout(tabsWriteTimer);
     tabsWriteTimer = null;
   }
   tabsCache = {};
+  tabsDirty = false;
   remove(STORAGE_KEYS.SOLVED);
   remove(STORAGE_KEYS.TABS);
 }
