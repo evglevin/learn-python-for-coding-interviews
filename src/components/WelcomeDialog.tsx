@@ -77,7 +77,7 @@ export function WelcomeDialog({ totalLessons, totalSections, onClose }: WelcomeD
         <ul className="mt-5 space-y-4">
           {points.map(({ icon: Icon, title, body }) => (
             <li key={title} className="flex gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[var(--bg-elevated)] text-[var(--accent-tab)]">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[var(--bg-elevated)] text-[var(--accent)]">
                 <Icon className="h-4 w-4" />
               </div>
               <div>
@@ -94,7 +94,7 @@ export function WelcomeDialog({ totalLessons, totalSections, onClose }: WelcomeD
           <button
             type="submit"
             autoFocus
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-500 cursor-pointer"
+            className="rounded-md bg-accent-solid px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-solid-hover cursor-pointer"
           >
             Get started
           </button>

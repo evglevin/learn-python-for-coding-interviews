@@ -84,7 +84,7 @@ export const ConsolePanel = React.memo(function ConsolePanel({
           {/* Top Drag Handle */}
           <div
             onMouseDown={onResizeStart}
-            className="absolute -top-1 right-0 left-0 z-10 h-2 cursor-row-resize transition-colors hover:bg-indigo-500/40"
+            className="absolute -top-1 right-0 left-0 z-10 h-2 cursor-row-resize transition-colors hover:bg-accent/40"
             title="Drag to resize console"
           />
 
@@ -288,7 +288,7 @@ export const ConsolePanel = React.memo(function ConsolePanel({
                           onClick={() => setSelectedTestIdx(idx)}
                           className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
                             idx === selectedTestIdx
-                              ? 'border-indigo-500/60 bg-[var(--bg-elevated)] text-[var(--text-primary)]'
+                              ? 'border-accent/60 bg-[var(--bg-elevated)] text-[var(--text-primary)]'
                               : 'border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)]'
                           }`}
                         >

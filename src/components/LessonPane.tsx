@@ -169,7 +169,7 @@ export const LessonPane = React.memo(function LessonPane({
                       borderColor: 'var(--border-subtle)',
                     }}
                   >
-                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-indigo-400" />
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                     <div className="space-y-0.5">
                       {block.title && (
                         <div className="font-semibold text-[var(--text-primary)]">
@@ -305,7 +305,7 @@ export const LessonPane = React.memo(function LessonPane({
                   >
                     {isRevealed ? (
                       <div className="p-3.5">
-                        <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-indigo-400">
+                        <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-accent">
                           Hint {idx + 1}
                         </div>
                         <p className="leading-relaxed">{renderInline(hint)}</p>

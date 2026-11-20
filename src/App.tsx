@@ -59,7 +59,7 @@ const ResizeGutter: React.FC<{ onMouseDown: (e: React.MouseEvent) => void; title
     className="group flex w-2.5 shrink-0 cursor-col-resize items-center justify-center"
     title={title}
   >
-    <div className="h-10 w-1 rounded-full bg-[var(--border-strong)] transition-colors group-hover:bg-indigo-500" />
+    <div className="h-10 w-1 rounded-full bg-[var(--border-strong)] transition-colors group-hover:bg-accent" />
   </div>
 );
 

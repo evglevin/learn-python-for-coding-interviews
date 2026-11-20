@@ -3,6 +3,13 @@
 /* Make `dark:` utilities follow the in-app theme toggle (the .dark class on <html>), not the OS setting. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Expose the themed accent to Tailwind as `accent` / `accent-solid` (opacity modifiers work via color-mix). */
+@theme inline {
+  --color-accent: var(--accent);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-solid-hover: var(--accent-solid-hover);
+}
+
 :root {
   --bg-canvas: #f3f4f6;
   --bg-topbar: #ffffff;
@@ -15,7 +22,9 @@
   --text-primary: #14161a;
   --text-secondary: #4b5563;
   --text-muted: #71717a;
-  --accent-tab: #6366f1;
+  --accent: #0766ff;
+  --accent-solid: #0766ff;
+  --accent-solid-hover: #0558e0;
   --accent-green: #22c55e;
   --accent-green-bg: rgba(34, 197, 94, 0.1);
   --accent-red: #ef4444;
@@ -36,7 +45,9 @@
   --text-primary: #f4f4f5;
   --text-secondary: #c4c4cc;
   --text-muted: #8b8b96;
-  --accent-tab: #818cf8;
+  --accent: #4d8eff;
+  --accent-solid: #0766ff;
+  --accent-solid-hover: #2b7aff;
   --accent-green: #22c55e;
   --accent-green-bg: rgba(34, 197, 94, 0.11);
   --accent-red: #f87171;

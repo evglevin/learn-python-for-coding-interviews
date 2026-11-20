@@ -36,7 +36,7 @@ export const PanelTab: React.FC<PanelTabProps> = ({
     {active && (
       <span
         className="absolute right-2 bottom-0 left-2 h-[2px] rounded-full"
-        style={{ backgroundColor: 'var(--accent-tab)' }}
+        style={{ backgroundColor: 'var(--accent)' }}
       />
     )}
   </button>

@@ -137,7 +137,7 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Filter lessons..."
-            className="w-full rounded-md border py-1.5 pr-2.5 pl-8 text-xs outline-none transition-colors focus:border-indigo-500"
+            className="w-full rounded-md border py-1.5 pr-2.5 pl-8 text-xs outline-none transition-colors focus:border-accent"
             style={{
               backgroundColor: 'var(--bg-code)',
               borderColor: 'var(--border-subtle)',
@@ -180,7 +180,7 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10.5px] font-mono font-bold ${
                           isSectionComplete
                             ? 'bg-emerald-500/20 text-emerald-500'
-                            : 'bg-indigo-500/15 text-indigo-400'
+                            : 'bg-accent/15 text-accent'
                         }`}
                       >
                         {sec.number}
@@ -230,14 +230,14 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
                             onClick={() => onSelectLesson(lesson.id)}
                             className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors cursor-pointer ${
                               isCurrent
-                                ? 'ring-1 ring-inset ring-indigo-500/60 font-semibold text-[var(--text-primary)]'
+                                ? 'ring-1 ring-inset ring-accent/60 font-semibold text-[var(--text-primary)]'
                                 : 'font-normal text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
                             }`}
                             style={{
                               backgroundColor: isCurrent
                                 ? isSolved
                                   ? 'rgba(34, 197, 94, 0.16)'
-                                  : 'rgba(99, 102, 241, 0.14)'
+                                  : 'color-mix(in srgb, var(--accent) 14%, transparent)'
                                 : isSolved
                                 ? 'var(--accent-green-bg)'
                                 : undefined,
@@ -248,7 +248,7 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
                                 isSolved
                                   ? 'text-emerald-500'
                                   : isCurrent
-                                  ? 'text-indigo-400'
+                                  ? 'text-accent'
                                   : 'text-[var(--text-muted)]'
                               }`}
                             >

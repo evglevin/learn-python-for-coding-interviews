@@ -177,7 +177,7 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
         borderLeftWidth: '2px',
       },
       '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-        backgroundColor: isDark ? 'rgba(99, 102, 241, 0.30)' : 'rgba(99, 102, 241, 0.18)',
+        backgroundColor: isDark ? 'rgba(77, 142, 255, 0.30)' : 'rgba(7, 102, 255, 0.18)',
       },
       '.cm-gutters': {
         backgroundColor: isDark ? '#1e1e22' : '#fafafa',
@@ -190,7 +190,7 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
         color: isDark ? '#c4c4cc' : '#334155',
       },
       '.cm-activeLine': {
-        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.035)' : 'rgba(99, 102, 241, 0.04)',
+        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.035)' : 'rgba(7, 102, 255, 0.04)',
       },
       '.cm-foldPlaceholder': {
         backgroundColor: isDark ? '#2e2e36' : '#e5e7eb',
@@ -200,8 +200,8 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
         borderRadius: '3px',
       },
       '.cm-matchingBracket': {
-        backgroundColor: isDark ? 'rgba(99, 102, 241, 0.25)' : 'rgba(99, 102, 241, 0.18)',
-        outline: isDark ? '1px solid rgba(129, 140, 248, 0.6)' : '1px solid rgba(99, 102, 241, 0.5)',
+        backgroundColor: isDark ? 'rgba(77, 142, 255, 0.25)' : 'rgba(7, 102, 255, 0.18)',
+        outline: isDark ? '1px solid rgba(77, 142, 255, 0.6)' : '1px solid rgba(7, 102, 255, 0.5)',
       },
       '.cm-tooltip': {
         backgroundColor: isDark ? '#25252b' : '#ffffff',
@@ -339,7 +339,7 @@ const STATUS_UI: Record<
 > = {
   loading: { Icon: Loader2, iconClass: 'animate-spin text-amber-400', label: 'Loading Python...', labelClass: 'text-[var(--text-muted)]' },
   ready: { Icon: CheckCircle2, iconClass: 'text-emerald-500', label: 'Pyodide Ready', labelClass: 'text-[var(--text-muted)]' },
-  running: { Icon: Loader2, iconClass: 'animate-spin text-indigo-400', label: 'Running...', labelClass: 'text-indigo-400' },
+  running: { Icon: Loader2, iconClass: 'animate-spin text-accent', label: 'Running...', labelClass: 'text-accent' },
   error: { Icon: AlertCircle, iconClass: 'text-rose-500', label: 'Runtime Error', labelClass: 'text-rose-400' },
 };
 
