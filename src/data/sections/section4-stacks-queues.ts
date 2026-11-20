@@ -8,7 +8,7 @@ export const SECTION_4_STACKS_QUEUES: LessonData[] = [
     blocks: [
       {
         type: 'paragraph',
-        text: 'Python doesn’t need a separate `Stack` class — a regular Python `list` is the idiomatic **LIFO (Last-In, First-Out)** stack because both `.append()` (push) and `.pop()` (pop) operate on the end of the list in **O(1)** time.',
+        text: 'Python doesn’t need a separate `Stack` class — a regular Python `list` is the idiomatic **LIFO (Last-In, First-Out)** stack because both `.append()` (push) and `.pop()` (pop) operate on the end of the list in amortized **O(1)** time.',
       },
       {
         type: 'code',
@@ -32,7 +32,7 @@ is_empty = len(stack) == 0  # or: not stack`,
       functions: [
         {
           signature: 'reverse_list(arr: List[int]) -> List[int]',
-          description: 'Reverses `arr` by pushing/popping elements like a stack and returns the reversed list (without using `arr.reverse()` or `arr[::-1]`).',
+          description: 'Reverses `arr` by pushing/popping elements like a stack and returns the reversed list (without using `arr.reverse()` or `arr[::-1]`). Popping drains `arr`, leaving it empty.',
         },
       ],
     },
@@ -76,15 +76,19 @@ print(reverse_list([3, 2, 1, 4, 6, 2]))
 print(reverse_list([1, 9, 7, 3, 2, 1, 4, 6, 2]))
 `,
     solutionExplanation:
-      'Because `.pop()` removes from the top (end) of the stack in O(1) time and `.append()` pushes onto `res` in O(1) time, draining `arr` into `res` reverses the sequence in O(n) total time.',
+      'Because `.pop()` removes from the top (end) of the stack and `.append()` pushes onto `res`, each in amortized O(1) time, draining `arr` into `res` reverses the sequence in O(n) total time.',
     testCases: [
       {
         name: 'basic reversal',
-        inputDisplay: 'reverse_list([1, 2, 3, 4])',
-        expectedDisplay: '[4, 3, 2, 1]',
+        inputDisplay: 'a = [1, 2, 3, 4]; reverse_list(a)',
+        expectedDisplay: '[4, 3, 2, 1] (and a is drained to [])',
         testCode: `
-_actual = reverse_list([1, 2, 3, 4])
-_expected = [4, 3, 2, 1]`,
+a = [1, 2, 3, 4]
+_actual = reverse_list(a)
+_expected = [4, 3, 2, 1]
+_passed = _actual == _expected and a == []
+if not _passed:
+    _message = 'Expected [4, 3, 2, 1], with arr drained by popping from it like a stack.'`,
       },
       {
         name: 'single element and empty list',
@@ -118,7 +122,7 @@ first = queue.popleft()  # dequeue from front -> 1`,
       {
         type: 'note',
         title: 'BFS Essential',
-        text: 'Every Breadth-First Search (tree level-order traversal, shortest path in an unweighted graph/grid) uses `collections.deque` with `.append()` and `.popleft()`.',
+        text: 'Idiomatic Breadth-First Search in Python (tree level-order traversal, shortest path in an unweighted graph/grid) uses `collections.deque` with `.append()` and `.popleft()` — never `list.pop(0)`.',
       },
     ],
     challenge: {

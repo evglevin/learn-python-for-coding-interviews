@@ -40,7 +40,7 @@ print(grid[1][2])      # 6`,
       ],
     },
     complexity: {
-      time: 'O(N), where N is the total number of elements across all inner lists.',
+      time: 'O(N) for `find_max_in_each_list` (rows are non-empty); O(R + N) for `flatten`, where R is the number of rows and N is the total number of elements.',
       space: 'O(R) for `find_max_in_each_list` (R = number of rows); O(N) for `flatten`.',
     },
     hints: [
@@ -213,7 +213,7 @@ g = create_grid(3, 3, 0)
 g[0][1] = 9
 _actual = g
 _expected = [[0, 9, 0], [0, 0, 0], [0, 0, 0]]
-if g[1][1] != 0 or g[0] is g[1]:
+if g[1][1] != 0 or len({id(row) for row in g}) != len(g):
     _passed = False
     _message = 'Rows share the same list reference! Never use [[val] * cols] * rows.'`,
       },

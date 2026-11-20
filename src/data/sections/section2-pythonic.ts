@@ -18,7 +18,7 @@ print(x, y, z)  # 10 20 30`,
       },
       {
         type: 'paragraph',
-        text: 'The number of variables on the left must match the length of the sequence on the right — otherwise Python raises a `ValueError`. You can also use the **starred expression** (`*rest`) to capture remaining elements, or `_` to ignore values you do not need.',
+        text: 'Without a starred target, the number of variables on the left must match the number of items on the right — otherwise Python raises a `ValueError`. A **starred target** (`*rest`) collects the remaining items into a list, and by convention `_` names a value you do not need (it is still an ordinary variable).',
       },
       {
         type: 'code',
@@ -192,7 +192,7 @@ for x, y in points:
     },
     hints: [
       'Iterate with `for name, score in scores:` to unpack each tuple directly.',
-      'Track `best_score = float("-inf")` (or `scores[0][1]`) and `best_name = ""`. Update only when `score > best_score` so ties keep the first student.',
+      'Initialize `best_name, best_score = scores[0]` (or `best_name, best_score = "", float("-inf")`). Update both only when `score > best_score` so ties keep the first student.',
     ],
     starterCode: `from typing import List, Tuple
 
@@ -435,7 +435,7 @@ print(mapping)  # {'a': 1, 'b': 2, 'c': 3}`,
       functions: [
         {
           signature: 'group_names_and_scores(names: List[str], scores: List[int]) -> Dict[str, int]',
-          description: 'Accepts two equal-length lists `names` and `scores` and returns a dictionary mapping each name to its corresponding score.',
+          description: 'Accepts two equal-length lists `names` and `scores` and returns a dictionary mapping each name to its corresponding score. If a name appears more than once, its last score wins.',
         },
       ],
     },
@@ -525,7 +525,7 @@ if 0 < x < 10:
       },
       {
         type: 'paragraph',
-        text: 'Chained comparisons work for any length and any combination of comparison operators (`<`, `<=`, `>`, `>=`, `==`, `!=`). Each middle expression is evaluated **only once**.',
+        text: 'Chained comparisons work for any length and any combination of comparison operators (`<`, `<=`, `>`, `>=`, `==`, `!=`). Each middle expression is evaluated **at most once**, and evaluation stops at the first comparison that is `False`.',
       },
       {
         type: 'code',

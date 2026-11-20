@@ -24,7 +24,7 @@ print(elements)  # [1, 2, 3, 5, 6]`,
       },
       {
         type: 'paragraph',
-        text: 'The `.sort()` method works on any comparable data types, including strings (sorted in lexicographical / alphabetical order) and floats.',
+        text: 'The `.sort()` method works on any comparable data types, including strings (sorted lexicographically by Unicode code point — e.g. `"Zebra"` comes before `"apple"`, because ASCII uppercase letters precede lowercase ones) and floats.',
       },
       {
         type: 'code',
@@ -168,7 +168,7 @@ print(elements)  # [6, 5, 3, 2, 1]`,
       },
       {
         type: 'paragraph',
-        text: 'By default, `reverse` is `False`. Setting `reverse=True` works identically for strings (reverse alphabetical order), integers, and floats without needing a separate `.reverse()` call.',
+        text: 'By default, `reverse` is `False`. Setting `reverse=True` works identically for strings (reverse lexicographical order), integers, and floats without needing a separate `.reverse()` call.',
       },
       {
         type: 'note',
@@ -559,7 +559,7 @@ _expected = [[1, 9], [1, 4], [1, 2], [3, 10], [3, 5]]`,
     blocks: [
       {
         type: 'paragraph',
-        text: 'Unlike `.sort()`, which mutates a list in-place, Python’s built-in `sorted()` function returns a **brand-new sorted list** while leaving the original iterable untouched.',
+        text: 'Unlike `.sort()`, which mutates a list in-place, Python’s built-in `sorted()` function returns a **brand-new sorted list** while leaving the original list untouched.',
       },
       {
         type: 'code',
@@ -586,7 +586,7 @@ print(nums)                                 # [5, -2, 8, -1]`,
       functions: [
         {
           signature: 'sort_words(words: List[str]) -> List[str]',
-          description: 'Returns a new list of words sorted in ascending alphabetical order without mutating `words`.',
+          description: 'Returns a new list of words sorted in ascending lexicographical order without mutating `words`.',
         },
         {
           signature: 'sort_numbers(numbers: List[int]) -> List[int]',

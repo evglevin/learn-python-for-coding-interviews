@@ -91,7 +91,24 @@ h = [5, 10, 7]
 res = heap_push(h, 2)
 _actual = res
 _expected = 2
-_passed = (res == 2 and len(h) == 4 and h[0] == 2)`,
+is_heap = all(h[(i - 1) // 2] <= h[i] for i in range(1, len(h)))
+_passed = res == 2 and is_heap and sorted(h) == [2, 5, 7, 10]
+if not _passed:
+    _message = 'Expected heap_push to return 2 and leave h a valid min-heap of [2, 5, 7, 10].'`,
+      },
+      {
+        name: 'pushes larger element, root unchanged',
+        inputDisplay: 'h = [1, 4, 3]; heap_push(h, 8)',
+        expectedDisplay: '1 (and heap property preserved)',
+        testCode: `
+h = [1, 4, 3]
+res = heap_push(h, 8)
+_actual = res
+_expected = 1
+is_heap = all(h[(i - 1) // 2] <= h[i] for i in range(1, len(h)))
+_passed = res == 1 and is_heap and sorted(h) == [1, 3, 4, 8]
+if not _passed:
+    _message = 'Expected heap_push to return 1 and leave h a valid min-heap of [1, 3, 4, 8].'`,
       },
       {
         name: 'pushes into empty heap',
@@ -235,7 +252,7 @@ print(arr[0])        # 1 (guaranteed minimum)`,
         },
         {
           signature: 'heap_sort(arr: List[int]) -> List[int]',
-          description: 'Uses `heapq.heapify` and `heapq.heappop` to return a new list containing all elements of `arr` sorted in ascending order.',
+          description: 'Uses `heapq.heapify` and `heapq.heappop` to return a new list containing all elements of `arr` sorted in ascending order. (Popping drains `arr`, leaving it empty.)',
         },
       ],
     },
@@ -309,32 +326,38 @@ print(heap_sort([10, -2, 7, 3, 3, 0]))
         inputDisplay: 'heapify_strings(["d", "b", "a", "c"])',
         expectedDisplay: "Valid min-heap with root 'a'",
         testCode: `
-res = heapify_strings(["d", "b", "a", "c"])
+original = ["d", "b", "a", "c"]
+res = heapify_strings(original)
 _actual = res
 _expected = "valid min-heap with root 'a'"
 is_heap = all(res[i] <= res[2*i+1] for i in range(len(res)) if 2*i+1 < len(res)) and \\
           all(res[i] <= res[2*i+2] for i in range(len(res)) if 2*i+2 < len(res))
-_passed = is_heap and sorted(res) == ['a', 'b', 'c', 'd'] and res[0] == 'a'`,
+_passed = res is original and is_heap and sorted(res) == ['a', 'b', 'c', 'd'] and res[0] == 'a'`,
       },
       {
         name: 'heapify_integers satisfies min-heap property',
         inputDisplay: 'heapify_integers([9, 3, 7, 1, 5])',
         expectedDisplay: 'Valid min-heap with root 1',
         testCode: `
-res = heapify_integers([9, 3, 7, 1, 5])
+original = [9, 3, 7, 1, 5]
+res = heapify_integers(original)
 _actual = res
 _expected = 'valid min-heap with root 1'
 is_heap = all(res[i] <= res[2*i+1] for i in range(len(res)) if 2*i+1 < len(res)) and \\
           all(res[i] <= res[2*i+2] for i in range(len(res)) if 2*i+2 < len(res))
-_passed = is_heap and sorted(res) == [1, 3, 5, 7, 9] and res[0] == 1`,
+_passed = res is original and is_heap and sorted(res) == [1, 3, 5, 7, 9] and res[0] == 1`,
       },
       {
         name: 'heap_sort sorts ascending',
-        inputDisplay: 'heap_sort([5, -1, 4, 2, 2])',
-        expectedDisplay: '[-1, 2, 2, 4, 5]',
+        inputDisplay: 'a = [5, -1, 4, 2, 2]; heap_sort(a)',
+        expectedDisplay: '[-1, 2, 2, 4, 5] (and a is drained to [])',
         testCode: `
-_actual = heap_sort([5, -1, 4, 2, 2])
-_expected = [-1, 2, 2, 4, 5]`,
+a = [5, -1, 4, 2, 2]
+_actual = heap_sort(a)
+_expected = [-1, 2, 2, 4, 5]
+_passed = _actual == _expected and a == []
+if not _passed:
+    _message = 'Expected [-1, 2, 2, 4, 5], with arr heapified in-place and drained by heappop.'`,
       },
     ],
   },
@@ -345,7 +368,12 @@ _expected = [-1, 2, 2, 4, 5]`,
     blocks: [
       {
         type: 'paragraph',
-        text: 'Python’s `heapq` module only provides a **min-heap** out of the box. The standard interview trick to simulate a **max-heap** for numbers is to **negate every number** when pushing, and **negate it back** when popping!',
+        text: 'Before Python 3.14, the `heapq` module’s public API only provided a **min-heap**. The standard interview trick to simulate a **max-heap** for numbers is to **negate every number** when pushing, and **negate it back** when popping!',
+      },
+      {
+        type: 'note',
+        title: 'Python 3.14+ has public max-heap functions',
+        text: 'Python 3.14 added public max-heap operations including `heapq.heapify_max`, `heapq.heappush_max`, and `heapq.heappop_max`. This course runs Python 3.13. For the integers in this lesson, the negation trick works across Python 3 versions.',
       },
       {
         type: 'code',
@@ -361,7 +389,7 @@ second  = -heapq.heappop(max_heap)   # 4`,
       {
         type: 'note',
         title: 'Classic Interview Problems',
-        text: 'Negated max-heaps show up constantly in *Last Stone Weight*, *Kth Largest Element*, *Find Median from Data Stream* (two heaps!), and *Task Scheduler*.',
+        text: 'Negated max-heaps show up constantly in *Last Stone Weight*, *Find Median from Data Stream* (two heaps!), *Task Scheduler*, and *Reorganize String*.',
       },
     ],
     challenge: {
@@ -416,7 +444,7 @@ print(get_reverse_sorted([5, 6, 4, 2, 7, 3, 1]))
 print(get_reverse_sorted([5, 6, -4, 2, 4, 7, -3, -1]))
 `,
     solutionExplanation:
-      'Negating numbers flips their comparison order so the largest original number becomes the smallest negative number at `max_heap[0]`. Negating again on `heappop` restores the original values in descending order.',
+      'Negating numbers flips their comparison order so the largest original number becomes the smallest negated value at `max_heap[0]`. Negating again on `heappop` restores the original values in descending order.',
     testCases: [
       {
         name: 'handles positives, zero, and negatives',
@@ -443,7 +471,7 @@ _expected = []`,
     blocks: [
       {
         type: 'paragraph',
-        text: 'Unlike `list.sort(key=...)`, `heapq` does **not** accept a `key` parameter. To prioritize elements by a custom key (like distance, frequency, or absolute value), store **tuples** `(priority_key, item)` in the heap!',
+        text: 'Unlike `list.sort(key=...)`, `heapq.heappush`, `heapq.heappop`, and `heapq.heapify` do **not** accept a `key` parameter. To prioritize elements by a custom key (like distance, frequency, or absolute value), store **tuples** `(priority_key, item)` in the heap!',
       },
       {
         type: 'code',
@@ -461,7 +489,7 @@ while tasks:
       },
       {
         type: 'paragraph',
-        text: 'Python compares tuples **lexicographically**: first by element `0`, then breaking ties by element `1`, and so on. If element `1` isn’t comparable (like a `TreeNode` in *Merge K Sorted Lists*), insert a unique counter as a tie-breaker: `(priority, tie_breaker, node)`.',
+        text: 'Python compares tuples **lexicographically**: first by element `0`, then breaking ties by element `1`, and so on. If element `1` isn’t comparable (like a `ListNode` in *Merge K Sorted Lists*), insert a unique counter as a tie-breaker: `(priority, tie_breaker, node)`.',
       },
     ],
     challenge: {
@@ -469,7 +497,7 @@ while tasks:
       functions: [
         {
           signature: 'get_reverse_sorted(nums: List[int]) -> List[int]',
-          description: 'Uses a heap of tuples `(-abs(num), num)` (or `(-abs(num), -num, num)`) to return `nums` sorted by **absolute value in descending order**. Break ties in absolute value by placing the smaller actual number first (e.g., `-4` before `4`, matching Python’s tuple ordering `(-abs(num), num)`).',
+          description: 'Uses a heap of tuples `(-abs(num), num)` to return `nums` sorted by **absolute value in descending order**. Break ties in absolute value by placing the smaller actual number first (e.g., `-4` before `4`, matching Python’s tuple ordering `(-abs(num), num)`).',
         },
       ],
     },
@@ -479,7 +507,7 @@ while tasks:
     },
     hints: [
       'Push tuples of `(-abs(num), num)` into the min-heap!',
-      'Wait: when `abs(-4) == abs(4)`, `(-4, -4) < (-4, 4)` so `-4` pops before `4` automatically.',
+      'Ties: when `abs(-4) == abs(4)`, `(-4, -4) < (-4, 4)` so `-4` pops before `4` automatically.',
       'Pop each tuple as `_, num = heapq.heappop(heap)` and append `num` to `res`.',
     ],
     starterCode: `import heapq
@@ -561,7 +589,7 @@ print(heapq.nsmallest(2, words, key=len))  # ['kiwi', 'pear']`,
       {
         type: 'note',
         title: 'How to do it manually with a bounded max-heap (O(n log k))',
-        text: 'In interviews, you should know BOTH `heapq.nsmallest(k, nums)` AND the manual pattern: maintain a max-heap of size `k` (push `-x`, pop when `len(heap) > k`), which keeps memory at **O(k)** even for an infinite stream!',
+        text: 'In interviews, you should know BOTH `heapq.nsmallest(k, nums)` AND the manual pattern: maintain a max-heap of size `k` (push `-x`, pop when `len(heap) > k`), which tracks the `k` smallest values seen so far in **O(k)** memory — even for a huge stream that does not fit in memory!',
       },
     ],
     challenge: {
@@ -569,7 +597,7 @@ print(heapq.nsmallest(2, words, key=len))  # ['kiwi', 'pear']`,
       functions: [
         {
           signature: 'get_min_element(arr: List[int]) -> int',
-          description: 'Returns the single smallest element in `arr`.',
+          description: 'Given a non-empty list, returns the single smallest element in `arr`.',
         },
         {
           signature: 'get_min_4_elements(arr: List[int]) -> List[int]',
@@ -708,7 +736,7 @@ print(heapq.nlargest(2, words, key=len))  # ['watermelon', 'blueberry']`,
       },
       {
         type: 'paragraph',
-        text: 'Internally, `heapq.nlargest(k, iterable)` maintains a min-heap of size `k` — scanning the iterable in **O(n log k)** time and **O(k)** memory.',
+        text: 'Internally, CPython’s `heapq.nlargest(k, iterable)` uses `max()` for `k = 1`. Otherwise, if `len(iterable)` is available and at most `k`, it just uses `sorted()`. In the general case it keeps a min-heap of at most `k` items — scanning the iterable in **O(n log k)** time and **O(k)** memory.',
       },
     ],
     challenge: {
@@ -716,7 +744,7 @@ print(heapq.nlargest(2, words, key=len))  # ['watermelon', 'blueberry']`,
       functions: [
         {
           signature: 'get_max_element(arr: List[int]) -> int',
-          description: 'Returns the single largest integer in `arr`.',
+          description: 'Given a non-empty list, returns the single largest integer in `arr`.',
         },
         {
           signature: 'get_max_4_elements(arr: List[int]) -> List[int]',

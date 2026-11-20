@@ -8,7 +8,7 @@ export const SECTION_8_SORTED_CONTAINERS: LessonData[] = [
     blocks: [
       {
         type: 'paragraph',
-        text: 'Unlike C++ (`std::map`) or Java (`TreeMap`), Python’s standard library does not include a balanced-tree sorted map. Instead, coding platforms (LeetCode, HackerRank, and this local environment!) provide the `sortedcontainers` library, which includes `SortedDict`.',
+        text: 'Unlike C++ (`std::map`) or Java (`TreeMap`), Python’s standard library does not include a balanced-tree sorted map. Instead, LeetCode provides the third-party `sortedcontainers` library, which includes `SortedDict`. This course ships a compatible local implementation of the parts used here under the same import name.',
       },
       {
         type: 'code',
@@ -17,9 +17,9 @@ export const SECTION_8_SORTED_CONTAINERS: LessonData[] = [
 sd = SortedDict({"c": 3, "a": 1, "b": 2})
 print(list(sd.keys()))   # ['a', 'b', 'c']  (always sorted!)
 
-sd["d"] = 4              # O(log n) insert
-del sd["b"]              # O(log n) delete
-sd.pop("a")              # O(log n) pop key -> returns 1
+sd["d"] = 4              # ~O(log n) insert
+del sd["b"]              # ~O(log n) delete
+sd.pop("a")              # ~O(log n) pop key -> returns 1
 
 print(sd.peekitem(0))    # ('c', 3)  smallest key-value pair
 print(sd.peekitem(-1))   # ('d', 4)  largest key-value pair
@@ -27,7 +27,7 @@ print(sd.popitem(0))     # removes & returns ('c', 3)`,
       },
       {
         type: 'paragraph',
-        text: '`SortedDict` also supports binary search over sorted keys (`sd.bisect_left(key)`, `sd.bisect_right(key)`) and indexing (`sd.keys()[0]`, `sd.keys()[-1]`) in **O(log n)** time — making it ideal for *My Calendar*, *Stock Price Fluctuation*, and *Range Module* problems.',
+        text: '`SortedDict` also supports binary search over sorted keys (`sd.bisect_left(key)`, `sd.bisect_right(key)`) and indexing (`sd.keys()[0]`, `sd.keys()[-1]`) in **O(log n)** time — making it ideal for *My Calendar*, *Stock Price Fluctuation*, and *Range Module* problems. (The upstream library stores sorted entries in blocks and documents its mutation costs as *approximately* O(log n). This course’s local implementation uses flat lists, so inserting or deleting an entry can take O(n) here.)',
       },
     ],
     challenge: {
@@ -115,9 +115,13 @@ print(get_values_before_target(SortedDict({'Alice': 25, 'Bob': 30, 'Charlie': 35
         expectedDisplay: "SortedDict({'a': 1, 'c': 3})",
         testCode: `
 from sortedcontainers import SortedDict
-res = remove_keys(SortedDict({'c': 3, 'a': 1, 'b': 2}), ['b', 'z'])
+original = SortedDict({'c': 3, 'a': 1, 'b': 2})
+res = remove_keys(original, ['b', 'z'])
 _actual = list(res.items())
-_expected = [('a', 1), ('c', 3)]`,
+_expected = [('a', 1), ('c', 3)]
+_passed = res is original and _actual == _expected
+if not _passed:
+    _message = 'Expected the original SortedDict to be updated in-place and returned.'`,
       },
       {
         name: 'get_values_before_target stops before target',
@@ -146,7 +150,7 @@ _expected = [1, 2]`,
     blocks: [
       {
         type: 'paragraph',
-        text: '`SortedSet` from `sortedcontainers` is Python’s equivalent to C++ `std::set` or Java `TreeSet`: it stores **unique elements in sorted order** with O(log n) insertion, deletion, binary search, and **O(log n) indexing** (`ss[0]`, `ss[-1]`, `ss[k]`)!',
+        text: '`SortedSet` from `sortedcontainers` is Python’s equivalent to C++ `std::set` or Java `TreeSet`: it stores **unique elements in sorted order** with approximately O(log n) insertion and deletion, O(log n) binary search, and **O(log n) indexing** (`ss[0]`, `ss[-1]`, `ss[k]`)!',
       },
       {
         type: 'code',
@@ -155,8 +159,8 @@ _expected = [1, 2]`,
 ss = SortedSet([5, 1, 3, 3, 2])
 print(ss)                # SortedSet([1, 2, 3, 5])
 
-ss.add(4)                # O(log n)
-ss.discard(2)            # O(log n) safe delete
+ss.add(4)                # ~O(log n)
+ss.discard(2)            # ~O(log n) safe delete
 print(ss[0], ss[-1])     # 1 5 (min and max!)
 print(ss.bisect_left(3)) # 1 (index of first element >= 3)
 ss.pop(0)                # removes & returns smallest element -> 1`,
@@ -164,7 +168,7 @@ ss.pop(0)                # removes & returns smallest element -> 1`,
       {
         type: 'note',
         title: 'Why SortedSet beats a Heap in some problems',
-        text: 'A heap only supports O(log n) removal of the *minimum* element. When an interview problem requires **arbitrary deletion**, **finding the predecessor/successor** (`bisect_left`), or **querying both min and max** dynamically, `SortedSet` is the cleanest tool in Python.',
+        text: '`heapq.heappop()` efficiently removes only the *minimum*; removing an arbitrary value from a plain `heapq` list first needs an O(n) search. When an interview problem requires **arbitrary deletion**, **finding the predecessor/successor** (`bisect_left`), or **querying both min and max** dynamically, `SortedSet` is the cleanest tool in Python.',
       },
     ],
     challenge: {

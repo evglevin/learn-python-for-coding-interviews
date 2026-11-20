@@ -23,7 +23,7 @@ counts.pop("apple", None)      # remove safely (no KeyError if missing)`,
       {
         type: 'note',
         title: 'Most important data structure in interviews',
-        text: 'Roughly 40% of coding interview problems optimize an O(n²) brute-force loop down to O(n) by trading space for O(1) lookups with a `dict`.',
+        text: 'A huge number of coding interview problems are solved by optimizing an O(n²) brute-force loop down to O(n), trading extra space for O(1) average-case lookups with a `dict`.',
       },
     ],
     challenge: {
@@ -31,7 +31,7 @@ counts.pop("apple", None)      # remove safely (no KeyError if missing)`,
       functions: [
         {
           signature: 'build_hash_map(keys: List[str], values: List[int]) -> Dict[str, int]',
-          description: 'Creates and returns a dictionary mapping each key in `keys` to its corresponding value in `values`.',
+          description: 'Given two equal-length lists, creates and returns a dictionary mapping each key in `keys` to its corresponding value in `values`. If a key appears more than once, its last value wins.',
         },
         {
           signature: 'get_values(hash_map: Dict[str, int], keys: List[str]) -> List[int]',
@@ -135,7 +135,7 @@ groups["fruit"].append("pear")`,
       {
         type: 'note',
         title: 'Be careful when reading from a defaultdict',
-        text: 'Accessing `d[missing_key]` with brackets **inserts** the key with the default value! If you only want to check membership without inserting, use `key in d` or `d.get(key)`.',
+        text: 'Accessing `d[missing_key]` with brackets **inserts** the key with the default value! To check membership without inserting, use `key in d`; to read a value without inserting, use `d.get(key, fallback)`.',
       },
     ],
     challenge: {
@@ -147,7 +147,7 @@ groups["fruit"].append("pear")`,
         },
         {
           signature: 'nested_list_to_dict(nums: List[List[int]]) -> Dict[int, List[int]]',
-          description: 'Each inner list starts with a key followed by zero or more values (`[key, v1, v2, ...]`). Groups all values under their respective keys (preserving order across inner lists) and returns the dictionary.',
+          description: 'Each inner list starts with a key followed by zero or more values (`[key, v1, v2, ...]`). Groups all values under their respective keys (preserving order across inner lists) and returns the dictionary. A key with no values still appears, mapped to an empty list.',
         },
       ],
     },
@@ -158,7 +158,7 @@ groups["fruit"].append("pear")`,
     hints: [
       'Use `counts = defaultdict(int)` for `count_chars` and do `counts[c] += 1`.',
       'Use `groups = defaultdict(list)` for `nested_list_to_dict`: unpack `key, *vals = sublist` (or `sublist[0]` and `sublist[1:]`) and `groups[key].extend(vals)`.',
-      'A `defaultdict` is a subclass of `dict`, or you can return `dict(groups)` for clean printing.',
+      'A `defaultdict` is a subclass of `dict`, so you can return it directly — or return `dict(groups)` if you want a plain `dict`.',
     ],
     starterCode: `from typing import List, Dict
 from collections import defaultdict
@@ -201,9 +201,8 @@ def count_chars(s: str) -> Dict[str, int]:
 def nested_list_to_dict(nums: List[List[int]]) -> Dict[int, List[int]]:
     output = defaultdict(list)
     for sublist in nums:
-        first = sublist[0]
-        for i in range(1, len(sublist)):
-            output[first].append(sublist[i])
+        key, *vals = sublist
+        output[key].extend(vals)
     return output
 
 
@@ -234,6 +233,22 @@ _expected = ({'a': 2, 'b': 2, 'c': 1}, {})`,
         testCode: `
 _actual = dict(nested_list_to_dict([[2, 10], [3, 20, 30], [2, 40]]))
 _expected = {2: [10, 40], 3: [20, 30]}`,
+      },
+      {
+        name: 'nested_list_to_dict keeps keys with no values',
+        inputDisplay: 'nested_list_to_dict([[7], [3, 1], [7, 2]])',
+        expectedDisplay: '{7: [2], 3: [1]}',
+        testCode: `
+_actual = dict(nested_list_to_dict([[7], [3, 1], [7, 2]]))
+_expected = {7: [2], 3: [1]}`,
+      },
+      {
+        name: 'nested_list_to_dict key alone maps to empty list',
+        inputDisplay: 'nested_list_to_dict([[5]])',
+        expectedDisplay: '{5: []}',
+        testCode: `
+_actual = dict(nested_list_to_dict([[5]]))
+_expected = {5: []}`,
       },
     ],
   },
@@ -269,17 +284,17 @@ print(c1 + c2)         # Counter({'b': 2, 'c': 2, 'a': 1, 'd': 1})`,
       intro: 'Implement the following functions using `collections.Counter`:',
       functions: [
         {
-          signature: 'count_chars(word1: str, word2: str) -> CounterType[str]',
+          signature: 'count_chars(word1: str, word2: str) -> Counter',
           description: 'Returns a `Counter` containing the combined character frequencies of both `word1` and `word2`.',
         },
         {
           signature: 'top_k_frequent(nums: List[int], k: int) -> List[int]',
-          description: 'Returns a list of the `k` most frequent integers in `nums` (ordered from most frequent to least frequent).',
+          description: 'Returns a list of the `k` most frequent distinct integers in `nums` (or all of them, if there are fewer than `k`), ordered from most frequent to least frequent. Ties keep the order in which the numbers first appear in `nums` (this is exactly how `most_common` orders equal counts).',
         },
       ],
     },
     complexity: {
-      time: 'O(n + m) for `count_chars`; O(n log k) for `Counter(nums).most_common(k)`.',
+      time: 'O(n + m) for `count_chars`; O(n + u log k) for `top_k_frequent` — O(n) to count, then O(u log k) for `most_common(k)` (just O(u) when k = 1), where u is the number of unique values.',
       space: 'O(u) where u is the number of unique items.',
     },
     hints: [
@@ -334,7 +349,7 @@ print(top_k_frequent([1, 1, 1, 2, 2, 3], 2))
 print(top_k_frequent([4, 4, 4, 4, 2, 2, 5, 5, 5], 2))
 `,
     solutionExplanation:
-      '`Counter(word1)` followed by `counter.update(word2)` merges frequencies in O(n + m) time. `Counter(nums).most_common(k)` uses a heap internally to retrieve the top `k` items in O(n log k) time.',
+      '`Counter(word1)` followed by `counter.update(word2)` merges frequencies in O(n + m) time. `Counter(nums).most_common(k)` uses `heapq.nlargest` internally, so after the O(n) counting pass it retrieves the top `k` of the u unique values in O(u log k) time for `k ≥ 2` (O(u) for `k = 1`).',
     testCases: [
       {
         name: 'count_chars combines both words',
@@ -343,7 +358,10 @@ print(top_k_frequent([4, 4, 4, 4, 2, 2, 5, 5, 5], 2))
         testCode: `
 from collections import Counter
 _actual = count_chars("aab", "bcc")
-_expected = Counter({'a': 2, 'b': 2, 'c': 2})`,
+_expected = Counter({'a': 2, 'b': 2, 'c': 2})
+_passed = isinstance(_actual, Counter) and _actual == _expected
+if not _passed:
+    _message = 'Expected a Counter with the combined counts.'`,
       },
       {
         name: 'top_k_frequent returns k most frequent in order',
@@ -352,6 +370,14 @@ _expected = Counter({'a': 2, 'b': 2, 'c': 2})`,
         testCode: `
 _actual = top_k_frequent([5, 5, 5, 1, 1, 9, 9, 9, 9], 2)
 _expected = [9, 5]`,
+      },
+      {
+        name: 'top_k_frequent breaks ties by first appearance',
+        inputDisplay: 'top_k_frequent([5, 9, 3, 5, 9, 3], 1)',
+        expectedDisplay: '[5]',
+        testCode: `
+_actual = top_k_frequent([5, 9, 3, 5, 9, 3], 1)
+_expected = [5]`,
       },
     ],
   },
@@ -370,7 +396,7 @@ _expected = [9, 5]`,
 squares = {n: n * n for n in nums}
 print(squares)  # {1: 1, 2: 4, 3: 9, 4: 16}
 
-# Invert a dict (swap keys and values)
+# Invert a dict (values must be unique and hashable)
 original = {"a": 1, "b": 2}
 inverted = {v: k for k, v in original.items()}
 print(inverted)  # {1: 'a', 2: 'b'}`,
@@ -629,7 +655,7 @@ print(check_keys({"a", "b", "c"}, ["a", "d", "c"]))
 print(check_keys({"a", "c"}, ["d", "c"]))
 `,
     solutionExplanation:
-      '`set(keys)` deduplicates any iterable in O(n) time, and `key in hash_set` checks membership in O(1) average time.',
+      '`set(keys)` deduplicates an iterable of hashable items in O(n) average time, and `key in hash_set` checks membership in O(1) average time.',
     testCases: [
       {
         name: 'build_hash_set deduplicates and returns set',
@@ -765,7 +791,7 @@ _passed = isinstance(res, set) and res == set()`,
     blocks: [
       {
         type: 'paragraph',
-        text: 'Keys in a `dict` and elements in a `set` must be **hashable (immutable)**. Lists are mutable, so putting a list into a set or dict raises `TypeError: unhashable type: \'list\'`.',
+        text: 'Keys in a `dict` and elements in a `set` must be **hashable**. Immutable built-ins like `int`, `str`, and tuples of hashable values are hashable; mutable containers like `list`, `dict`, and `set` are not. Using a list as a set element or a dict key raises `TypeError: unhashable type: \'list\'` (lists are fine as dict *values*).',
       },
       {
         type: 'code',

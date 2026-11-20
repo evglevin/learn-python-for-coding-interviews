@@ -15,14 +15,14 @@ export const SECTION_3_LISTS: LessonData[] = [
         code: `arr = [1, 2, 3]
 
 arr.append(4)     # O(1) amortized -> [1, 2, 3, 4]
-arr.pop()         # O(1)           -> [1, 2, 3]
+arr.pop()         # O(1) amortized -> [1, 2, 3]
 arr.insert(1, 99) # O(n)           -> [1, 99, 2, 3]`,
       },
       {
         type: 'list',
         items: [
           '`.append(x)` adds `x` to the end in **O(1)** amortized time.',
-          '`.pop()` removes and returns the last element in **O(1)** time. Calling `.pop(i)` at an arbitrary index `i` is **O(n)** because subsequent elements must shift left.',
+          '`.pop()` removes and returns the last element in **O(1)** amortized time. Calling `.pop(i)` at an arbitrary index `i` is **O(n)** because subsequent elements must shift left.',
           '`.insert(i, x)` inserts `x` before index `i` in **O(n)** time because elements from `i` onward shift right.',
         ],
       },
@@ -32,7 +32,7 @@ arr.insert(1, 99) # O(n)           -> [1, 99, 2, 3]`,
       functions: [
         {
           signature: 'append_elements(arr1: List[int], arr2: List[int]) -> List[int]',
-          description: 'Appends every element of `arr2` onto the end of `arr1` and returns `arr1`.',
+          description: 'Appends every element of `arr2` onto the end of `arr1` and returns `arr1`. (`arr1` and `arr2` are distinct lists.)',
         },
         {
           signature: 'pop_n(arr: List[int], n: int) -> List[int]',
@@ -45,7 +45,7 @@ arr.insert(1, 99) # O(n)           -> [1, 99, 2, 3]`,
       ],
     },
     complexity: {
-      time: '`append_elements`: O(m) where m = len(arr2); `pop_n`: O(min(n, len(arr))); `insert_at`: O(len(arr)).',
+      time: '`append_elements`: amortized O(m) where m = len(arr2); `pop_n`: O(min(n, len(arr))); `insert_at`: O(len(arr)).',
       space: 'O(1) extra space (modifies input list in-place).',
     },
     hints: [
@@ -157,7 +157,7 @@ _expected = ([1, 2, 3], [1, 2, 3], [1, 2, 3])`,
     blocks: [
       {
         type: 'paragraph',
-        text: 'Python lists also provide several handy built-in methods for searching, extending, and removing values — all of which scan linearly in **O(n)** time.',
+        text: 'Python lists also provide several handy built-in methods for searching, removing, and extending. Searching (`.index()`) and removing by value (`.remove()`) scan the list linearly in **O(n)** time, while `.extend(iterable)` costs amortized **O(k)**, where k is the number of items added.',
       },
       {
         type: 'code',
@@ -170,7 +170,7 @@ nums.extend([5, 6])  # appends all items from iterable -> [1, 3, 2, 4, 5, 6]`,
       {
         type: 'note',
         title: 'Watch out for O(n) inside loops',
-        text: 'Calling `x in my_list`, `my_list.index(x)`, or `my_list.remove(x)` inside a loop makes your solution **O(n²)**. When you need fast membership checks or deletions, reach for a `set` or `dict` instead.',
+        text: 'Checking or removing from a list of length `m` (`x in my_list`, `my_list.index(x)`, `my_list.remove(x)`) on each of `n` loop iterations takes **O(n · m)** time — **O(n²)** when both are about `n`. When you need fast membership checks or deletions, reach for a `set` or `dict` instead.',
       },
     ],
     challenge: {
@@ -182,12 +182,12 @@ nums.extend([5, 6])  # appends all items from iterable -> [1, 3, 2, 4, 5, 6]`,
         },
         {
           signature: 'remove_elements(arr1: List[int], arr2: List[int]) -> List[int]',
-          description: 'For each value in `arr2`, removes its **first** occurrence from `arr1` if it exists in `arr1`. Returns `arr1`.',
+          description: 'For each value in `arr2`, removes its **first** occurrence from `arr1` if it exists in `arr1`. Returns `arr1`. (`arr1` and `arr2` are distinct lists.)',
         },
       ],
     },
     complexity: {
-      time: '`append_elements`: O(m); `remove_elements`: O(n * m) using list `.remove()`.',
+      time: '`append_elements`: amortized O(m); `remove_elements`: O(n * m) using list `.remove()`.',
       space: 'O(1) extra space.',
     },
     hints: [
@@ -246,13 +246,16 @@ print(remove_elements([1, 7, 2, 3, 4, 5], [6, 7, 8, 2]))
     testCases: [
       {
         name: 'append_elements extends in-place',
-        inputDisplay: 'append_elements([1, 2], [3, 4])',
-        expectedDisplay: '[1, 2, 3, 4]',
+        inputDisplay: 'a = [1, 2]; append_elements(a, [3, 4])',
+        expectedDisplay: '[1, 2, 3, 4] (and the result is a itself)',
         testCode: `
 a = [1, 2]
 res = append_elements(a, [3, 4])
 _actual = res
-_expected = [1, 2, 3, 4]`,
+_expected = [1, 2, 3, 4]
+_passed = res == _expected and res is a
+if not _passed:
+    _message = 'Expected arr1 itself to be extended in-place and returned.'`,
       },
       {
         name: 'remove_elements handles duplicates and missing elements',
@@ -294,7 +297,7 @@ print(arr2)      # [4, 5, 6] (unchanged)`,
       {
         type: 'note',
         title: '+ vs .extend() vs +=',
-        text: '`arr1 + arr2` allocates a new list of size `len(arr1) + len(arr2)` (O(n + m) time & space). By contrast, `arr1.extend(arr2)` (or `arr1 += arr2`) mutates `arr1` in-place in O(m) time. Never do `res = res + [x]` inside a loop — that is O(n²)!',
+        text: '`arr1 + arr2` allocates a new list of size `len(arr1) + len(arr2)` (O(n + m) time & space). By contrast, `arr1.extend(arr2)` (or `arr1 += arr2`) mutates `arr1` in-place in amortized O(m) time. Never do `res = res + [x]` inside a loop — that is O(n²)!',
       },
     ],
     challenge: {
@@ -488,7 +491,7 @@ _expected = [0, 0, 0, 9]`,
         type: 'code',
         code: `original = [1, 2, 3]
 
-# Four ways to make a shallow copy:
+# Three ways to make a shallow copy:
 c1 = original.copy()
 c2 = original[:]
 c3 = list(original)
@@ -499,7 +502,7 @@ print(c1)        # [1, 2, 3, 4]`,
       },
       {
         type: 'paragraph',
-        text: 'For **nested lists** (like a 2D matrix), a shallow copy still shares references to the inner rows. Use `copy.deepcopy()` (or a nested comprehension) when you need an independent copy of nested mutable structures.',
+        text: 'For **nested lists** (like a 2D matrix), a shallow copy still shares references to the inner rows. For a grid of immutable values, copying each row (`[row.copy() for row in grid]`) is enough. Use `copy.deepcopy()` when the cells themselves contain mutable objects that also need copying.',
       },
       {
         type: 'code',
@@ -626,7 +629,7 @@ labels = ["even" if x % 2 == 0 else "odd" for x in nums]`,
       },
       {
         type: 'paragraph',
-        text: 'General syntax: `[expression for item in iterable if condition]`. Comprehensions run faster than an equivalent `for` + `.append()` loop because the loop executes inside CPython’s bytecode engine.',
+        text: 'General syntax: `[expression for item in iterable if condition]`. Comprehensions usually run faster than an equivalent `for` + `.append()` loop because they skip looking up and calling the `.append` method on every iteration — CPython adds each item with a dedicated `LIST_APPEND` bytecode instruction instead.',
       },
     ],
     challenge: {
