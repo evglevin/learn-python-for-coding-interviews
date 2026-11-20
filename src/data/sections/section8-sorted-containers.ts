@@ -8,7 +8,7 @@ export const SECTION_8_SORTED_CONTAINERS: LessonData[] = [
     blocks: [
       {
         type: 'paragraph',
-        text: 'Unlike C++ (`std::map`) or Java (`TreeMap`), Python’s standard library does not include a balanced-tree sorted map. Instead, LeetCode provides the third-party `sortedcontainers` library, which includes `SortedDict`. This course ships a compatible local implementation of the parts used here under the same import name.',
+        text: 'Unlike C++ (`std::map`) or Java (`TreeMap`), Python’s standard library does not include a balanced-tree sorted map. Instead, LeetCode provides the third-party `sortedcontainers` library, which includes `SortedDict`. This website provides a compatible implementation of the parts used here under the same import name.',
       },
       {
         type: 'code',
@@ -27,7 +27,7 @@ print(sd.popitem(0))     # removes & returns ('c', 3)`,
       },
       {
         type: 'paragraph',
-        text: '`SortedDict` also supports binary search over sorted keys (`sd.bisect_left(key)`, `sd.bisect_right(key)`) and indexing (`sd.keys()[0]`, `sd.keys()[-1]`) in **O(log n)** time — making it ideal for *My Calendar*, *Stock Price Fluctuation*, and *Range Module* problems. (The upstream library stores sorted entries in blocks and documents its mutation costs as *approximately* O(log n). This course’s local implementation uses flat lists, so inserting or deleting an entry can take O(n) here.)',
+        text: '`SortedDict` also supports binary search over sorted keys (`sd.bisect_left(key)`, `sd.bisect_right(key)`) and indexing (`sd.keys()[0]`, `sd.keys()[-1]`) in **O(log n)** time — making it ideal for *My Calendar*, *Stock Price Fluctuation*, and *Range Module* problems. (The upstream library stores sorted entries in blocks and documents its mutation costs as *approximately* O(log n). This website’s implementation uses flat lists, so inserting or deleting an entry can take O(n) here.)',
       },
     ],
     challenge: {
