@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Check,
   ChevronDown,
@@ -13,9 +13,15 @@ interface CurriculumSidebarProps {
   lessons: Lesson[];
   currentLesson: Lesson;
   solvedIds: Set<string>;
+  collapsedSections: ReadonlySet<string>;
   onSelectLesson: (lessonId: string) => void;
+  onToggleSection: (sectionId: string) => void;
   onResetProgress: () => void;
   width: number;
+}
+
+function scrollActiveLessonIntoView(item: HTMLButtonElement | null) {
+  item?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
 export const CurriculumSidebar = React.memo(function CurriculumSidebar({
@@ -23,52 +29,27 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
   lessons,
   currentLesson,
   solvedIds,
+  collapsedSections,
   onSelectLesson,
+  onToggleSection,
   onResetProgress,
   width,
 }: CurriculumSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() => new Set());
   const [confirmReset, setConfirmReset] = useState(false);
-  const activeItemRef = useRef<HTMLButtonElement | null>(null);
-
-  // Ensure the active lesson's section is expanded and scroll it into view on lesson switch
-  useEffect(() => {
-    setCollapsedSections((prev) => {
-      if (!prev.has(currentLesson.sectionId)) return prev;
-      const next = new Set(prev);
-      next.delete(currentLesson.sectionId);
-      return next;
-    });
-  }, [currentLesson.sectionId]);
-
-  useEffect(() => {
-    activeItemRef.current?.scrollIntoView({
-      block: 'nearest',
-      behavior: 'smooth',
-    });
-  }, [currentLesson.id]);
-
-  const toggleSection = (sectionId: string) => {
-    setCollapsedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(sectionId)) next.delete(sectionId);
-      else next.add(sectionId);
-      return next;
-    });
-  };
+  const query = searchQuery.trim().toLowerCase();
+  const isFiltering = query.length > 0;
 
   const lessonsBySection = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
     const map = new Map<string, Lesson[]>();
     for (const sec of sections) {
       const matched = lessons.filter((l) => {
         if (l.sectionId !== sec.id) return false;
-        if (!q) return true;
+        if (!query) return true;
         return (
-          l.title.toLowerCase().includes(q) ||
-          String(l.index) === q ||
-          sec.shortTitle.toLowerCase().includes(q)
+          l.title.toLowerCase().includes(query) ||
+          String(l.index) === query ||
+          sec.shortTitle.toLowerCase().includes(query)
         );
       });
       if (matched.length > 0) {
@@ -76,7 +57,7 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
       }
     }
     return map;
-  }, [sections, lessons, searchQuery]);
+  }, [sections, lessons, query]);
 
   const sectionStats = useMemo(() => {
     const stats = new Map<string, { total: number; solved: number }>();
@@ -161,15 +142,17 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
 
               const { total: secTotal, solved: secSolved } = sectionStats.get(sec.id)!;
               const isSectionComplete = secSolved === secTotal;
-              const isCollapsed = !searchQuery.trim() && collapsedSections.has(sec.id);
+              const isCollapsed = !isFiltering && collapsedSections.has(sec.id);
 
               return (
                 <div key={sec.id}>
                   {/* Section Header Banner */}
                   <button
                     type="button"
-                    onClick={() => toggleSection(sec.id)}
-                    className="flex w-full items-center justify-between gap-2 rounded-md border px-2 py-2 text-left transition-colors hover:border-[var(--border-strong)] cursor-pointer"
+                    aria-expanded={!isCollapsed}
+                    disabled={isFiltering}
+                    onClick={() => onToggleSection(sec.id)}
+                    className="flex w-full items-center justify-between gap-2 rounded-md border px-2 py-2 text-left transition-colors enabled:cursor-pointer enabled:hover:border-[var(--border-strong)]"
                     style={{
                       backgroundColor: 'var(--bg-elevated)',
                       borderColor: 'var(--border-subtle)',
@@ -225,7 +208,7 @@ export const CurriculumSidebar = React.memo(function CurriculumSidebar({
                         return (
                           <button
                             key={lesson.id}
-                            ref={isCurrent ? activeItemRef : undefined}
+                            ref={isCurrent ? scrollActiveLessonIntoView : undefined}
                             type="button"
                             onClick={() => onSelectLesson(lesson.id)}
                             className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors cursor-pointer ${

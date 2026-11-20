@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { EditorState, Compartment, Prec, type Extension } from '@codemirror/state';
 import {
   EditorView,
@@ -54,16 +54,17 @@ import {
 import type { RuntimeStatus, SolutionTab } from '../types/course';
 import { FONT_SIZE_MAX, FONT_SIZE_MIN } from '../lib/storage';
 
+export interface CodeEditorHandle {
+  openDocument: (code: string) => void;
+  replaceCode: (code: string) => void;
+  configureAppearance: (theme: 'dark' | 'light', fontSize: number) => void;
+}
+
 interface CodeEditorProps {
   tabs: SolutionTab[];
   activeTabId: string;
-  /** Code of the active tab. */
-  code: string;
-  /**
-   * Identity of the open document (lesson + tab). When it changes the editor
-   * gets a fresh state, so undo history never crosses tabs or lessons.
-   */
-  docKey: string;
+  initialCode: string;
+  editorRef: React.RefObject<CodeEditorHandle | null>;
   onSelectTab: (id: string) => void;
   onAddTab: () => void;
   onCloseTab: (id: string) => void;
@@ -339,8 +340,8 @@ const STATUS_UI: Record<
 export const CodeEditor: React.FC<CodeEditorProps> = ({
   tabs,
   activeTabId,
-  code,
-  docKey,
+  initialCode,
+  editorRef,
   onSelectTab,
   onAddTab,
   onCloseTab,
@@ -356,55 +357,37 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   isExpanded,
   onToggleExpand,
 }) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const viewRef = useRef<EditorView | null>(null);
-  const themeCompartment = useRef(new Compartment());
-  /** Theme-independent extensions, built once on mount. */
-  const baseExtensionsRef = useRef<Extension[]>([]);
-  const onChangeRef = useRef(onChangeCode);
-  const onRunRef = useRef(onRun);
-  const onSubmitRef = useRef(onSubmit);
-  const isExternalUpdateRef = useRef(false);
-  /** Last code reported via onChangeCode, to recognise our own edits echoing back as props. */
-  const lastEmittedRef = useRef(code);
-
+  const initialSettings = useRef({ code: initialCode, theme, fontSize });
+  const callbacks = useRef({ onChangeCode, onRun, onSubmit });
+  callbacks.current = { onChangeCode, onRun, onSubmit };
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
 
-  onChangeRef.current = onChangeCode;
-  onRunRef.current = onRun;
-  onSubmitRef.current = onSubmit;
+  const attachEditor = useCallback((container: HTMLDivElement | null) => {
+    if (!container) return;
 
-  const createState = (doc: string) =>
-    EditorState.create({
-      doc,
-      extensions: [
-        ...baseExtensionsRef.current,
-        themeCompartment.current.of(themeExtensions(theme, fontSize)),
-      ],
-    });
-
-  // Mount CodeMirror once
-  useEffect(() => {
-    if (!containerRef.current) return;
+    const themeCompartment = new Compartment();
+    const settings = initialSettings.current;
+    const initialAppearance = themeExtensions(settings.theme, settings.fontSize);
+    let replacingCode = false;
 
     const runShortcut = keymap.of([
       {
         key: 'Mod-Enter',
         run: () => {
-          onRunRef.current();
+          callbacks.current.onRun();
           return true;
         },
       },
       {
         key: 'Mod-Shift-Enter',
         run: () => {
-          onSubmitRef.current();
+          callbacks.current.onSubmit();
           return true;
         },
       },
     ]);
 
-    baseExtensionsRef.current = [
+    const extensions = [
       lineNumbers(),
       highlightActiveLineGutter(),
       history(),
@@ -445,10 +428,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         indentWithTab,
       ]),
       EditorView.updateListener.of((update) => {
-        if (update.docChanged && !isExternalUpdateRef.current) {
-          const text = update.state.doc.toString();
-          lastEmittedRef.current = text;
-          onChangeRef.current(text);
+        if (update.docChanged && !replacingCode) {
+          callbacks.current.onChangeCode(update.state.doc.toString());
         }
         if (update.selectionSet || update.docChanged) {
           const head = update.state.selection.main.head;
@@ -461,49 +442,38 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       }),
     ];
 
-    const view = new EditorView({
-      state: createState(code),
-      parent: containerRef.current,
-    });
-    viewRef.current = view;
+    const createState = (doc: string, appearance: Extension) =>
+      EditorState.create({ doc, extensions: [...extensions, themeCompartment.of(appearance)] });
+
+    const view = new EditorView({ state: createState(settings.code, initialAppearance), parent: container });
+
+    editorRef.current = {
+      openDocument(code) {
+        // A fresh state keeps undo history local to each visit to a document.
+        const appearance = themeCompartment.get(view.state) ?? initialAppearance;
+        view.setState(createState(code, appearance));
+        setCursorPos({ line: 1, col: 1 });
+      },
+      replaceCode(code) {
+        const doc = view.state.doc;
+        if (doc.toString() === code) return;
+        replacingCode = true;
+        try {
+          view.dispatch({ changes: { from: 0, to: doc.length, insert: code } });
+        } finally {
+          replacingCode = false;
+        }
+      },
+      configureAppearance(theme, fontSize) {
+        view.dispatch({ effects: themeCompartment.reconfigure(themeExtensions(theme, fontSize)) });
+      },
+    };
 
     return () => {
+      editorRef.current = null;
       view.destroy();
-      viewRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Switching tab or lesson: load that document into a fresh state (own undo history).
-  const mountedDocKeyRef = useRef(docKey);
-  useEffect(() => {
-    const view = viewRef.current;
-    if (!view || mountedDocKeyRef.current === docKey) return;
-    mountedDocKeyRef.current = docKey;
-    view.setState(createState(code));
-    lastEmittedRef.current = code;
-    setCursorPos({ line: 1, col: 1 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [docKey]);
-
-  // Same document replaced from outside (reset, "Load in Editor"): apply as an undoable edit.
-  useEffect(() => {
-    const view = viewRef.current;
-    if (!view || code === lastEmittedRef.current) return;
-    lastEmittedRef.current = code;
-    const currentDoc = view.state.doc.toString();
-    if (currentDoc === code) return;
-    isExternalUpdateRef.current = true;
-    view.dispatch({ changes: { from: 0, to: currentDoc.length, insert: code } });
-    isExternalUpdateRef.current = false;
-  }, [code]);
-
-  // Reconfigure theme & font size dynamically
-  useEffect(() => {
-    viewRef.current?.dispatch({
-      effects: themeCompartment.current.reconfigure(themeExtensions(theme, fontSize)),
-    });
-  }, [theme, fontSize]);
+  }, [editorRef]);
 
   const status = STATUS_UI[runtimeStatus];
 
@@ -641,7 +611,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       </div>
 
       {/* CodeMirror Mount */}
-      <div ref={containerRef} className="min-h-0 flex-1 overflow-hidden" />
+      <div ref={attachEditor} className="min-h-0 flex-1 overflow-hidden" />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   LESSONS,
   SECTIONS,
@@ -6,19 +6,20 @@ import {
   getLessonsBySection,
   getSectionById,
 } from './data';
-import type { RunResult, RuntimeStatus, SolutionTab } from './types/course';
+import type { RunResult, SolutionTab } from './types/course';
 import { pyodideRunner } from './lib/pyodideRunner';
 import {
   clearAllProgress,
   defaultTabs,
   loadActiveLessonId,
+  loadCollapsedSections,
   loadFontSize,
   loadLessonTabs,
   loadSidebarOpen,
   loadSolvedIds,
-  loadTheme,
   loadWelcomeSeen,
   saveActiveLessonId,
+  saveCollapsedSections,
   saveFontSize,
   saveLessonTabs,
   saveSidebarOpen,
@@ -28,7 +29,7 @@ import {
 } from './lib/storage';
 import { TopBar } from './components/TopBar';
 import { LessonPane } from './components/LessonPane';
-import { CodeEditor } from './components/CodeEditor';
+import { CodeEditor, type CodeEditorHandle } from './components/CodeEditor';
 import { ConsolePanel } from './components/ConsolePanel';
 import { CurriculumSidebar } from './components/CurriculumSidebar';
 import { WelcomeDialog } from './components/WelcomeDialog';
@@ -63,8 +64,8 @@ const ResizeGutter: React.FC<{ onMouseDown: (e: React.MouseEvent) => void; title
   </div>
 );
 
-export default function App() {
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => loadTheme());
+export default function App({ initialTheme }: { initialTheme: 'dark' | 'light' }) {
+  const [theme, setTheme] = useState(initialTheme);
   const [fontSize, setFontSize] = useState<number>(() => loadFontSize());
   const [solvedIds, setSolvedIds] = useState<Set<string>>(() => loadSolvedIds());
   const [showWelcome, setShowWelcome] = useState<boolean>(() => !loadWelcomeSeen());
@@ -85,21 +86,24 @@ export default function App() {
   const positionInSection =
     sectionLessons.findIndex((l) => l.id === currentLesson.id) + 1;
 
-  // Per-lesson solution tabs. `loadedTabsRef` holds the array last read from
-  // storage so the save effect below skips it (only real edits are persisted).
+  // CodeMirror can emit multiple edits before React renders the updated tabs.
   const [tabs, setTabs] = useState<SolutionTab[]>(() =>
     loadLessonTabs(currentLesson.id, currentLesson.starterCode)
   );
-  const loadedTabsRef = useRef(tabs);
+  const tabsRef = useRef(tabs);
   const [activeTabId, setActiveTabId] = useState<string>(tabs[0].id);
+  const editorRef = useRef<CodeEditorHandle>(null);
 
   // Lessons sidebar
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => loadSidebarOpen());
   const [sidebarWidth, setSidebarWidth] = useState<number>(268);
+  const [collapsedSections, setCollapsedSections] = useState(loadCollapsedSections);
 
   // Runtime + console state
-  const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatus>('loading');
-  const [runtimeError, setRuntimeError] = useState<string | undefined>();
+  const { status: runtimeStatus, error: runtimeError } = useSyncExternalStore(
+    pyodideRunner.subscribe,
+    pyodideRunner.getSnapshot
+  );
   const [consoleOpen, setConsoleOpen] = useState(false);
   const [consoleHeight, setConsoleHeight] = useState(250);
   const [runResult, setRunResult] = useState<RunResult | null>(null);
@@ -109,101 +113,104 @@ export default function App() {
   const [editorExpanded, setEditorExpanded] = useState(false);
   const contentSplitRef = useRef<HTMLDivElement | null>(null);
 
-  // Apply theme class to <html>
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    saveTheme(theme);
-  }, [theme]);
-
-  // Subscribe to Pyodide Web Worker status
-  useEffect(() => {
-    return pyodideRunner.subscribe((status, err) => {
-      setRuntimeStatus(status);
-      setRuntimeError(err);
-    });
-  }, []);
-
-  useEffect(() => {
-    saveActiveLessonId(activeLessonId);
-  }, [activeLessonId]);
-
-  const showTabs = useCallback((next: SolutionTab[]) => {
-    loadedTabsRef.current = next;
+  const updateTabs = useCallback((next: SolutionTab[]) => {
+    tabsRef.current = next;
     setTabs(next);
-    setActiveTabId(next[0].id);
   }, []);
+
+  const persistTabs = useCallback((next: SolutionTab[]) => {
+    updateTabs(next);
+    saveLessonTabs(activeLessonId, next);
+  }, [activeLessonId, updateTabs]);
+
+  const openTab = useCallback((tab: SolutionTab) => {
+    setActiveTabId(tab.id);
+    editorRef.current?.openDocument(tab.code);
+  }, []);
+
+  const setSectionCollapsed = useCallback((sectionId: string, collapsed: boolean) => {
+    if (collapsedSections.has(sectionId) === collapsed) return;
+    const next = new Set(collapsedSections);
+    if (collapsed) next.add(sectionId);
+    else next.delete(sectionId);
+    setCollapsedSections(next);
+    saveCollapsedSections(next);
+  }, [collapsedSections]);
 
   const selectLesson = useCallback(
     (lessonId: string) => {
       if (lessonId === activeLessonId) return;
       const lesson = getLessonById(lessonId);
+      if (lesson.sectionId !== currentLesson.sectionId) {
+        setSectionCollapsed(lesson.sectionId, false);
+      }
       setActiveLessonId(lesson.id);
-      showTabs(loadLessonTabs(lesson.id, lesson.starterCode));
+      saveActiveLessonId(lesson.id);
+      const nextTabs = loadLessonTabs(lesson.id, lesson.starterCode);
+      updateTabs(nextTabs);
+      openTab(nextTabs[0]);
       setRunResult(null);
     },
-    [activeLessonId, showTabs]
+    [activeLessonId, currentLesson.sectionId, openTab, setSectionCollapsed, updateTabs]
   );
-
-  // Persist edits. Lesson and tabs always change together (selectLesson), so
-  // `activeLessonId` here is always the lesson these tabs belong to.
-  useEffect(() => {
-    if (tabs !== loadedTabsRef.current) saveLessonTabs(activeLessonId, tabs);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabs]);
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 
-  // Latest code for run/submit, read via ref so those callbacks stay stable while typing.
-  const activeCodeRef = useRef(activeTab.code);
-  activeCodeRef.current = activeTab.code;
-
   const handleChangeCode = useCallback(
     (newCode: string) => {
-      // Update eagerly so a Run fired before React re-renders still sees this edit.
-      activeCodeRef.current = newCode;
-      setTabs((prev) =>
-        prev.map((t) => (t.id === activeTabId ? { ...t, code: newCode } : t))
+      persistTabs(
+        tabsRef.current.map((t) => (t.id === activeTabId ? { ...t, code: newCode } : t))
       );
     },
-    [activeTabId]
+    [activeTabId, persistTabs]
   );
 
+  const handleSelectTab = useCallback((tabId: string) => {
+    if (tabId === activeTabId) return;
+    const tab = tabsRef.current.find((tab) => tab.id === tabId);
+    if (tab) openTab(tab);
+  }, [activeTabId, openTab]);
+
   const handleAddTab = useCallback(() => {
+    const tabs = tabsRef.current;
     const newTab: SolutionTab = {
       id: `tab-${Date.now()}`,
       name: `Solution ${tabs.length + 1}`,
       code: currentLesson.starterCode,
     };
-    setTabs([...tabs, newTab]);
-    setActiveTabId(newTab.id);
-  }, [tabs, currentLesson.starterCode]);
+    persistTabs([...tabs, newTab]);
+    openTab(newTab);
+  }, [currentLesson.starterCode, openTab, persistTabs]);
 
   const handleCloseTab = useCallback(
     (tabId: string) => {
+      const tabs = tabsRef.current;
       if (tabs.length <= 1) return;
       const next = tabs.filter((t) => t.id !== tabId);
-      setTabs(next);
-      if (tabId === activeTabId) setActiveTabId(next[0].id);
+      persistTabs(next);
+      if (tabId === activeTabId) openTab(next[0]);
     },
-    [tabs, activeTabId]
+    [activeTabId, openTab, persistTabs]
   );
 
+  const handleApplyCode = useCallback((code: string) => {
+    editorRef.current?.replaceCode(code);
+    handleChangeCode(code);
+  }, [handleChangeCode]);
+
   const handleResetCode = useCallback(() => {
-    handleChangeCode(currentLesson.starterCode);
-  }, [currentLesson.starterCode, handleChangeCode]);
+    handleApplyCode(currentLesson.starterCode);
+  }, [currentLesson.starterCode, handleApplyCode]);
 
   const executeCode = useCallback(
     async (mode: 'run' | 'submit') => {
       if (runtimeStatus === 'loading' || runtimeStatus === 'running') return;
       setConsoleOpen(true);
+      const tabs = tabsRef.current;
+      const tab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
       const res = await pyodideRunner.execute({
         mode,
-        code: activeCodeRef.current,
+        code: tab.code,
         expectedOutput: currentLesson.expectedOutput,
         testCases: currentLesson.testCases,
       });
@@ -219,7 +226,7 @@ export default function App() {
         });
       }
     },
-    [currentLesson, runtimeStatus]
+    [activeTabId, currentLesson, runtimeStatus]
   );
 
   const handleRun = useCallback(() => {
@@ -249,26 +256,37 @@ export default function App() {
   const handleResetProgress = useCallback(() => {
     clearAllProgress();
     setSolvedIds(new Set());
-    showTabs(defaultTabs(currentLesson.starterCode));
+    const next = defaultTabs(currentLesson.starterCode);
+    updateTabs(next);
+    if (activeTabId === next[0].id) editorRef.current?.replaceCode(next[0].code);
+    else openTab(next[0]);
     setRunResult(null);
-  }, [currentLesson.starterCode, showTabs]);
+  }, [activeTabId, currentLesson.starterCode, openTab, updateTabs]);
 
   const handleChangeFontSize = useCallback((size: number) => {
+    if (size === fontSize) return;
     setFontSize(size);
     saveFontSize(size);
-  }, []);
+    editorRef.current?.configureAppearance(theme, size);
+  }, [fontSize, theme]);
 
   const handleToggleSidebar = useCallback(() => {
-    setSidebarOpen((prev) => {
-      const next = !prev;
-      saveSidebarOpen(next);
-      return next;
-    });
-  }, []);
+    const next = !sidebarOpen;
+    setSidebarOpen(next);
+    saveSidebarOpen(next);
+  }, [sidebarOpen]);
+
+  const handleToggleSection = useCallback((sectionId: string) => {
+    setSectionCollapsed(sectionId, !collapsedSections.has(sectionId));
+  }, [collapsedSections, setSectionCollapsed]);
 
   const handleToggleTheme = useCallback(() => {
-    setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
-  }, []);
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.classList.toggle('dark', next === 'dark');
+    saveTheme(next);
+    editorRef.current?.configureAppearance(next, fontSize);
+  }, [fontSize, theme]);
 
   const handleCloseWelcome = useCallback(() => {
     saveWelcomeSeen();
@@ -339,7 +357,9 @@ export default function App() {
               lessons={LESSONS}
               currentLesson={currentLesson}
               solvedIds={solvedIds}
+              collapsedSections={collapsedSections}
               onSelectLesson={selectLesson}
+              onToggleSection={handleToggleSection}
               onResetProgress={handleResetProgress}
               width={sidebarWidth}
             />
@@ -363,7 +383,7 @@ export default function App() {
                   key={currentLesson.id}
                   lesson={currentLesson}
                   isSolved={solvedIds.has(currentLesson.id)}
-                  onApplySolution={handleChangeCode}
+                  onApplySolution={handleApplyCode}
                 />
               </div>
               <ResizeGutter onMouseDown={handleHorizontalDrag} title="Drag to resize panes" />
@@ -382,9 +402,9 @@ export default function App() {
               <CodeEditor
                 tabs={tabs}
                 activeTabId={activeTab.id}
-                code={activeTab.code}
-                docKey={`${currentLesson.id}/${activeTab.id}`}
-                onSelectTab={setActiveTabId}
+                initialCode={activeTab.code}
+                editorRef={editorRef}
+                onSelectTab={handleSelectTab}
                 onAddTab={handleAddTab}
                 onCloseTab={handleCloseTab}
                 onChangeCode={handleChangeCode}

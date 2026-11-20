@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -56,14 +56,30 @@ export const TopBar = React.memo(function TopBar({
   const [timerOpen, setTimerOpen] = useState(false);
   const [timerRunning, setTimerRunning] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerId = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (!timerRunning) return;
-    const id = setInterval(() => {
+  const startTimer = () => {
+    if (timerId.current !== null) return;
+    timerId.current = window.setInterval(() => {
       setElapsedSeconds((s) => s + 1);
     }, 1000);
-    return () => clearInterval(id);
-  }, [timerRunning]);
+    setTimerRunning(true);
+  };
+
+  const clearTimer = useCallback(() => {
+    if (timerId.current === null) return;
+    window.clearInterval(timerId.current);
+    timerId.current = null;
+  }, []);
+
+  const pauseTimer = () => {
+    clearTimer();
+    setTimerRunning(false);
+  };
+
+  const attachHeader = useCallback((header: HTMLElement | null) => {
+    if (header) return clearTimer;
+  }, [clearTimer]);
 
   const progressRatio = totalLessons > 0 ? solvedCount / totalLessons : 0;
   const radius = 11;
@@ -72,6 +88,7 @@ export const TopBar = React.memo(function TopBar({
 
   return (
     <header
+      ref={attachHeader}
       className="flex h-11 shrink-0 items-center justify-between border-b px-3 select-none"
       style={{
         backgroundColor: 'var(--bg-topbar)',
@@ -142,7 +159,7 @@ export const TopBar = React.memo(function TopBar({
           >
             <button
               type="button"
-              onClick={() => setTimerRunning((r) => !r)}
+              onClick={timerRunning ? pauseTimer : startTimer}
               className="rounded p-1 text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
               title={timerRunning ? 'Pause timer' : 'Start timer'}
             >
@@ -158,7 +175,7 @@ export const TopBar = React.memo(function TopBar({
             <button
               type="button"
               onClick={() => {
-                setTimerRunning(false);
+                pauseTimer();
                 setElapsedSeconds(0);
               }}
               className="rounded p-1 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
@@ -180,7 +197,7 @@ export const TopBar = React.memo(function TopBar({
             type="button"
             onClick={() => {
               setTimerOpen(true);
-              setTimerRunning(true);
+              startTimer();
             }}
             className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
             title="Start interview timer"

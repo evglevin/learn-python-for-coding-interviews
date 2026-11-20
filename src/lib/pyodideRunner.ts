@@ -1,8 +1,6 @@
 import type { RunResult, RuntimeStatus, TestCase } from '../types/course';
 import { makeErrorResult } from './runResult';
 
-type StatusListener = (status: RuntimeStatus, error?: string) => void;
-
 interface PendingRequest {
   id: number;
   resolve: (result: RunResult) => void;
@@ -17,9 +15,8 @@ const EXECUTION_TIMEOUT_MS = 6000;
 
 class PyodideRunner {
   private worker: Worker | null = null;
-  private status: RuntimeStatus = 'loading';
-  private statusError: string | undefined;
-  private listeners = new Set<StatusListener>();
+  private snapshot: { status: RuntimeStatus; error?: string } = { status: 'loading' };
+  private listeners = new Set<() => void>();
   private requestCounter = 0;
   /** At most one execution is in flight; stop and timeout replace the worker. */
   private pending: PendingRequest | null = null;
@@ -31,20 +28,21 @@ class PyodideRunner {
   }
 
   private setStatus(status: RuntimeStatus, error?: string) {
-    this.status = status;
-    this.statusError = error;
+    if (this.snapshot.status === status && this.snapshot.error === error) return;
+    this.snapshot = { status, error };
     for (const listener of this.listeners) {
-      listener(status, error);
+      listener();
     }
   }
 
-  public subscribe(listener: StatusListener): () => void {
+  public getSnapshot = () => this.snapshot;
+
+  public subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
-    listener(this.status, this.statusError);
     return () => {
       this.listeners.delete(listener);
     };
-  }
+  };
 
   private spawnWorker() {
     this.worker?.terminate();
@@ -119,7 +117,7 @@ class PyodideRunner {
         makeErrorResult(params.mode, params.expectedOutput, 'Another execution is already running.')
       );
     }
-    if (!this.worker || this.status === 'error') {
+    if (!this.worker || this.snapshot.status === 'error') {
       this.spawnWorker();
     }
 

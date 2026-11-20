@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { BookOpen, Code2, HardDrive, Play } from 'lucide-react';
 
 interface WelcomeDialogProps {
@@ -16,15 +16,12 @@ const Kbd: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </kbd>
 );
 
+function openWelcomeDialog(dialog: HTMLDialogElement | null) {
+  if (dialog && !dialog.open) dialog.showModal();
+}
+
 /** One-time introduction shown on first launch. Any way of closing it counts as dismissal. */
 export function WelcomeDialog({ totalLessons, totalSections, onClose }: WelcomeDialogProps) {
-  const ref = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (dialog && !dialog.open) dialog.showModal();
-  }, []);
-
   const points = [
     {
       icon: BookOpen,
@@ -56,7 +53,7 @@ export function WelcomeDialog({ totalLessons, totalSections, onClose }: WelcomeD
 
   return (
     <dialog
-      ref={ref}
+      ref={openWelcomeDialog}
       onClose={onClose}
       // Clicking the backdrop (the dialog element itself, outside the card) closes it.
       onClick={(e) => {

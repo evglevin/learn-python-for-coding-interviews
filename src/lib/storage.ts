@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   THEME: 'py_interviews_theme_v1',
   FONT_SIZE: 'py_interviews_font_size_v1',
   SIDEBAR_OPEN: 'py_interviews_sidebar_open_v1',
+  COLLAPSED_SECTIONS: 'py_interviews_collapsed_sections_v1',
   WELCOME_SEEN: 'py_interviews_welcome_seen_v1',
 } as const;
 
@@ -146,6 +147,15 @@ export function loadSidebarOpen(): boolean {
 
 export function saveSidebarOpen(open: boolean): void {
   write(STORAGE_KEYS.SIDEBAR_OPEN, String(open));
+}
+
+export function loadCollapsedSections(): Set<string> {
+  const ids = readJson(STORAGE_KEYS.COLLAPSED_SECTIONS);
+  return new Set(Array.isArray(ids) ? ids.filter((id) => typeof id === 'string') : []);
+}
+
+export function saveCollapsedSections(ids: ReadonlySet<string>): void {
+  write(STORAGE_KEYS.COLLAPSED_SECTIONS, JSON.stringify([...ids]));
 }
 
 export function loadWelcomeSeen(): boolean {
