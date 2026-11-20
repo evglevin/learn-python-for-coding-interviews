@@ -24,6 +24,7 @@ export interface TestCase {
 
 export interface Lesson {
   id: string;
+  /** Position in the full course (0-based); derived from order in src/data/index.ts. */
   index: number;
   sectionId: string;
   title: string;
@@ -46,10 +47,12 @@ export interface Lesson {
   testCases: TestCase[];
 }
 
+/** A lesson as authored in src/data/sections/*.ts; `index` is assigned on load. */
+export type LessonData = Omit<Lesson, 'index'>;
+
 export interface Section {
   id: string;
   number: number;
-  title: string;
   shortTitle: string;
 }
 

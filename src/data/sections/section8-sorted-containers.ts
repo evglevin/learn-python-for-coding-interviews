@@ -1,9 +1,8 @@
-import type { Lesson } from '../../types/course';
+import type { LessonData } from '../../types/course';
 
-export const SECTION_8_SORTED_CONTAINERS: Lesson[] = [
+export const SECTION_8_SORTED_CONTAINERS: LessonData[] = [
   {
     id: 'sorted-dict-basics',
-    index: 38,
     sectionId: 'sorted-dicts-and-sets',
     title: 'Sorted Dict Basics',
     blocks: [
@@ -142,7 +141,6 @@ _expected = [1, 2]`,
   },
   {
     id: 'sorted-set-basics',
-    index: 39,
     sectionId: 'sorted-dicts-and-sets',
     title: 'Sorted Set Basics',
     blocks: [

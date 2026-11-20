@@ -1,9 +1,8 @@
-import type { Lesson } from '../../types/course';
+import type { LessonData } from '../../types/course';
 
-export const SECTION_6_HASHMAPS_HASHSETS: Lesson[] = [
+export const SECTION_6_HASHMAPS_HASHSETS: LessonData[] = [
   {
     id: 'hash-map-basics',
-    index: 23,
     sectionId: 'hashmaps-and-hashsets',
     title: 'Hash Map Basics',
     blocks: [
@@ -111,7 +110,6 @@ _expected = [10, 0, 5]`,
   },
   {
     id: 'default-dict',
-    index: 24,
     sectionId: 'hashmaps-and-hashsets',
     title: 'Default Dict',
     blocks: [
@@ -241,7 +239,6 @@ _expected = {2: [10, 40], 3: [20, 30]}`,
   },
   {
     id: 'counter',
-    index: 25,
     sectionId: 'hashmaps-and-hashsets',
     title: 'Counter',
     blocks: [
@@ -360,7 +357,6 @@ _expected = [9, 5]`,
   },
   {
     id: 'dict-comprehension',
-    index: 26,
     sectionId: 'hashmaps-and-hashsets',
     title: 'Dict Comprehension',
     blocks: [
@@ -446,7 +442,6 @@ _expected = {}`,
   },
   {
     id: 'dict-items',
-    index: 27,
     sectionId: 'hashmaps-and-hashsets',
     title: 'Dict Items',
     blocks: [
@@ -534,7 +529,6 @@ _expected = []`,
   },
   {
     id: 'hash-set-basics',
-    index: 28,
     sectionId: 'hashmaps-and-hashsets',
     title: 'Hash Set Basics',
     blocks: [
@@ -659,7 +653,6 @@ _expected = [True, False, True]`,
   },
   {
     id: 'set-comprehension',
-    index: 29,
     sectionId: 'hashmaps-and-hashsets',
     title: 'Set Comprehension',
     blocks: [
@@ -767,7 +760,6 @@ _passed = isinstance(res, set) and res == set()`,
   },
   {
     id: 'tuple-keys',
-    index: 30,
     sectionId: 'hashmaps-and-hashsets',
     title: 'Tuple Keys',
     blocks: [

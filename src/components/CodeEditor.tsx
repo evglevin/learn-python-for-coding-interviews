@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { EditorState, Compartment, Prec } from '@codemirror/state';
+import { EditorState, Compartment, Prec, type Extension } from '@codemirror/state';
 import {
   EditorView,
   keymap,
@@ -52,10 +52,18 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { RuntimeStatus, SolutionTab } from '../types/course';
+import { FONT_SIZE_MAX, FONT_SIZE_MIN } from '../lib/storage';
 
 interface CodeEditorProps {
   tabs: SolutionTab[];
   activeTabId: string;
+  /** Code of the active tab. */
+  code: string;
+  /**
+   * Identity of the open document (lesson + tab). When it changes the editor
+   * gets a fresh state, so undo history never crosses tabs or lessons.
+   */
+  docKey: string;
   onSelectTab: (id: string) => void;
   onAddTab: () => void;
   onCloseTab: (id: string) => void;
@@ -226,9 +234,28 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
   );
 }
 
+function themeExtensions(theme: 'dark' | 'light', fontSize: number): Extension {
+  return [
+    makeEditorTheme(theme, fontSize),
+    syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle),
+  ];
+}
+
+const STATUS_UI: Record<
+  RuntimeStatus,
+  { Icon: typeof Loader2; iconClass: string; label: string; labelClass: string }
+> = {
+  loading: { Icon: Loader2, iconClass: 'animate-spin text-amber-400', label: 'Loading Python...', labelClass: 'text-[var(--text-muted)]' },
+  ready: { Icon: CheckCircle2, iconClass: 'text-emerald-500', label: 'Pyodide Ready', labelClass: 'text-[var(--text-muted)]' },
+  running: { Icon: Loader2, iconClass: 'animate-spin text-indigo-400', label: 'Running...', labelClass: 'text-indigo-400' },
+  error: { Icon: AlertCircle, iconClass: 'text-rose-500', label: 'Runtime Error', labelClass: 'text-rose-400' },
+};
+
 export const CodeEditor: React.FC<CodeEditorProps> = ({
   tabs,
   activeTabId,
+  code,
+  docKey,
   onSelectTab,
   onAddTab,
   onCloseTab,
@@ -247,11 +274,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   const themeCompartment = useRef(new Compartment());
-  const highlightCompartment = useRef(new Compartment());
+  /** Theme-independent extensions, built once on mount. */
+  const baseExtensionsRef = useRef<Extension[]>([]);
   const onChangeRef = useRef(onChangeCode);
   const onRunRef = useRef(onRun);
   const onSubmitRef = useRef(onSubmit);
   const isExternalUpdateRef = useRef(false);
+  /** Last code reported via onChangeCode, to recognise our own edits echoing back as props. */
+  const lastEmittedRef = useRef(code);
 
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
 
@@ -259,7 +289,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   onRunRef.current = onRun;
   onSubmitRef.current = onSubmit;
 
-  const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
+  const createState = (doc: string) =>
+    EditorState.create({
+      doc,
+      extensions: [
+        ...baseExtensionsRef.current,
+        themeCompartment.current.of(themeExtensions(theme, fontSize)),
+      ],
+    });
 
   // Mount CodeMirror once
   useEffect(() => {
@@ -282,70 +319,65 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       },
     ]);
 
-    const state = EditorState.create({
-      doc: activeTab.code,
-      extensions: [
-        lineNumbers(),
-        highlightActiveLineGutter(),
-        history(),
-        foldGutter(),
-        drawSelection(),
-        dropCursor(),
-        EditorState.allowMultipleSelections.of(true),
-        indentOnInput(),
-        indentUnit.of('    '),
-        bracketMatching(),
-        closeBrackets(),
-        tooltips({ position: 'fixed' }),
-        pythonSignatureHelp,
-        autocompletion({
-          activateOnTyping: true,
-          override: [pythonCompletionSource],
-          maxRenderedOptions: 30,
-          icons: true,
-        }),
-        rectangularSelection(),
-        crosshairCursor(),
-        highlightActiveLine(),
-        highlightSelectionMatches(),
-        python(),
-        runShortcut,
-        Prec.high(
-          keymap.of([
-            { key: 'Tab', run: acceptCompletion },
-            ...completionKeymap,
-          ])
-        ),
+    baseExtensionsRef.current = [
+      lineNumbers(),
+      highlightActiveLineGutter(),
+      history(),
+      foldGutter(),
+      drawSelection(),
+      dropCursor(),
+      EditorState.allowMultipleSelections.of(true),
+      indentOnInput(),
+      indentUnit.of('    '),
+      bracketMatching(),
+      closeBrackets(),
+      tooltips({ position: 'fixed' }),
+      pythonSignatureHelp,
+      autocompletion({
+        activateOnTyping: true,
+        override: [pythonCompletionSource],
+        maxRenderedOptions: 30,
+        icons: true,
+      }),
+      rectangularSelection(),
+      crosshairCursor(),
+      highlightActiveLine(),
+      highlightSelectionMatches(),
+      python(),
+      runShortcut,
+      Prec.high(
         keymap.of([
-          ...closeBracketsKeymap,
-          ...defaultKeymap,
-          ...searchKeymap,
-          ...historyKeymap,
-          ...foldKeymap,
-          indentWithTab,
-        ]),
-        themeCompartment.current.of(makeEditorTheme(theme, fontSize)),
-        highlightCompartment.current.of(
-          syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle)
-        ),
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged && !isExternalUpdateRef.current) {
-            onChangeRef.current(update.state.doc.toString());
-          }
-          if (update.selectionSet || update.docChanged) {
-            const head = update.state.selection.main.head;
-            const line = update.state.doc.lineAt(head);
-            setCursorPos({
-              line: line.number,
-              col: head - line.from + 1,
-            });
-          }
-        }),
-      ],
-    });
+          { key: 'Tab', run: acceptCompletion },
+          ...completionKeymap,
+        ])
+      ),
+      keymap.of([
+        ...closeBracketsKeymap,
+        ...defaultKeymap,
+        ...searchKeymap,
+        ...historyKeymap,
+        ...foldKeymap,
+        indentWithTab,
+      ]),
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged && !isExternalUpdateRef.current) {
+          const text = update.state.doc.toString();
+          lastEmittedRef.current = text;
+          onChangeRef.current(text);
+        }
+        if (update.selectionSet || update.docChanged) {
+          const head = update.state.selection.main.head;
+          const line = update.state.doc.lineAt(head);
+          setCursorPos({
+            line: line.number,
+            col: head - line.from + 1,
+          });
+        }
+      }),
+    ];
 
     const view = new EditorView({
-      state,
+      state: createState(code),
       parent: containerRef.current,
     });
     viewRef.current = view;
@@ -357,33 +389,38 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sync external code changes (switching lesson, switching tab, resetting, loading solution)
+  // Switching tab or lesson: load that document into a fresh state (own undo history).
+  const mountedDocKeyRef = useRef(docKey);
   useEffect(() => {
     const view = viewRef.current;
-    if (!view) return;
+    if (!view || mountedDocKeyRef.current === docKey) return;
+    mountedDocKeyRef.current = docKey;
+    view.setState(createState(code));
+    lastEmittedRef.current = code;
+    setCursorPos({ line: 1, col: 1 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [docKey]);
+
+  // Same document replaced from outside (reset, "Load in Editor"): apply as an undoable edit.
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view || code === lastEmittedRef.current) return;
+    lastEmittedRef.current = code;
     const currentDoc = view.state.doc.toString();
-    if (currentDoc !== activeTab.code) {
-      isExternalUpdateRef.current = true;
-      view.dispatch({
-        changes: { from: 0, to: currentDoc.length, insert: activeTab.code },
-      });
-      isExternalUpdateRef.current = false;
-    }
-  }, [activeTab.code, activeTab.id]);
+    if (currentDoc === code) return;
+    isExternalUpdateRef.current = true;
+    view.dispatch({ changes: { from: 0, to: currentDoc.length, insert: code } });
+    isExternalUpdateRef.current = false;
+  }, [code]);
 
   // Reconfigure theme & font size dynamically
   useEffect(() => {
-    const view = viewRef.current;
-    if (!view) return;
-    view.dispatch({
-      effects: [
-        themeCompartment.current.reconfigure(makeEditorTheme(theme, fontSize)),
-        highlightCompartment.current.reconfigure(
-          syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle)
-        ),
-      ],
+    viewRef.current?.dispatch({
+      effects: themeCompartment.current.reconfigure(themeExtensions(theme, fontSize)),
     });
   }, [theme, fontSize]);
+
+  const status = STATUS_UI[runtimeStatus];
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -407,30 +444,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             className="flex items-center gap-1.5 text-xs"
             title={runtimeError || 'In-browser Python WebAssembly (Pyodide)'}
           >
-            {runtimeStatus === 'loading' && (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-400" />
-                <span className="text-[var(--text-muted)]">Loading Python...</span>
-              </>
-            )}
-            {runtimeStatus === 'ready' && (
-              <>
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                <span className="text-[var(--text-muted)]">Pyodide Ready</span>
-              </>
-            )}
-            {runtimeStatus === 'running' && (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-400" />
-                <span className="text-indigo-400">Running...</span>
-              </>
-            )}
-            {runtimeStatus === 'error' && (
-              <>
-                <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
-                <span className="text-rose-400">Runtime Error</span>
-              </>
-            )}
+            <status.Icon className={`h-3.5 w-3.5 ${status.iconClass}`} />
+            <span className={status.labelClass}>{status.label}</span>
           </div>
         </div>
 
@@ -442,7 +457,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           >
             <button
               type="button"
-              onClick={() => onChangeFontSize(Math.max(12, fontSize - 1))}
+              onClick={() => onChangeFontSize(Math.max(FONT_SIZE_MIN, fontSize - 1))}
               className="rounded p-0.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
               title="Decrease font size"
             >
@@ -453,7 +468,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             </span>
             <button
               type="button"
-              onClick={() => onChangeFontSize(Math.min(22, fontSize + 1))}
+              onClick={() => onChangeFontSize(Math.min(FONT_SIZE_MAX, fontSize + 1))}
               className="rounded p-0.5 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
               title="Increase font size"
             >
@@ -495,7 +510,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       >
         <div className="flex items-center gap-1 overflow-x-auto">
           {tabs.map((tab) => {
-            const isActive = tab.id === activeTab.id;
+            const isActive = tab.id === activeTabId;
             return (
               <div
                 key={tab.id}

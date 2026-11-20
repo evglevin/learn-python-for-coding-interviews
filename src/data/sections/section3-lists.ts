@@ -1,9 +1,8 @@
-import type { Lesson } from '../../types/course';
+import type { LessonData } from '../../types/course';
 
-export const SECTION_3_LISTS: Lesson[] = [
+export const SECTION_3_LISTS: LessonData[] = [
   {
     id: 'resizable-list-part-1',
-    index: 11,
     sectionId: 'lists',
     title: 'Resizable List Part 1',
     blocks: [
@@ -153,7 +152,6 @@ _expected = ([1, 2, 3], [1, 2, 3], [1, 2, 3])`,
   },
   {
     id: 'resizable-list-part-2',
-    index: 12,
     sectionId: 'lists',
     title: 'Resizable List Part 2',
     blocks: [
@@ -276,7 +274,6 @@ _expected = [3]`,
   },
   {
     id: 'list-concat',
-    index: 13,
     sectionId: 'lists',
     title: 'List Concat',
     blocks: [
@@ -379,7 +376,6 @@ _expected = [5, 6]`,
   },
   {
     id: 'list-initialization',
-    index: 14,
     sectionId: 'lists',
     title: 'List Initialization',
     blocks: [
@@ -481,7 +477,6 @@ _expected = [0, 0, 0, 9]`,
   },
   {
     id: 'list-clone',
-    index: 15,
     sectionId: 'lists',
     title: 'List Clone',
     blocks: [
@@ -609,7 +604,6 @@ if not _passed:
   },
   {
     id: 'list-comprehension',
-    index: 16,
     sectionId: 'lists',
     title: 'List Comprehension',
     blocks: [

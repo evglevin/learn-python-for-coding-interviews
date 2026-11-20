@@ -1,9 +1,8 @@
-import type { Lesson } from '../../types/course';
+import type { LessonData } from '../../types/course';
 
-export const SECTION_2_PYTHONIC: Lesson[] = [
+export const SECTION_2_PYTHONIC: LessonData[] = [
   {
     id: 'unpacking',
-    index: 5,
     sectionId: 'pythonic-code',
     title: 'Unpacking',
     blocks: [
@@ -159,7 +158,6 @@ _expected = (8, [], 9)`,
   },
   {
     id: 'loop-unpacking',
-    index: 6,
     sectionId: 'pythonic-code',
     title: 'Loop Unpacking',
     blocks: [
@@ -262,7 +260,6 @@ _expected = 'B'`,
   },
   {
     id: 'enumerate',
-    index: 7,
     sectionId: 'pythonic-code',
     title: 'Enumerate',
     blocks: [
@@ -407,7 +404,6 @@ _expected = 3`,
   },
   {
     id: 'zip',
-    index: 8,
     sectionId: 'pythonic-code',
     title: 'Zip',
     blocks: [
@@ -512,7 +508,6 @@ _expected = {'Solo': 42}`,
   },
   {
     id: 'inequality',
-    index: 9,
     sectionId: 'pythonic-code',
     title: 'Inequality',
     blocks: [
@@ -638,7 +633,6 @@ _expected = (True, False, False)`,
   },
   {
     id: 'min-max-shortcut',
-    index: 10,
     sectionId: 'pythonic-code',
     title: 'Min Max Shortcut',
     blocks: [

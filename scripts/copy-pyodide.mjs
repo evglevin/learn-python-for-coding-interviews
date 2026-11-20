@@ -13,7 +13,6 @@ if (!fs.existsSync(srcDir)) {
 }
 
 const filesToCopy = [
-  'pyodide.js',
   'pyodide.mjs',
   'pyodide.asm.js',
   'pyodide.asm.wasm',

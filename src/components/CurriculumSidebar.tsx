@@ -20,7 +20,7 @@ interface CurriculumSidebarProps {
   width: number;
 }
 
-export const CurriculumSidebar: React.FC<CurriculumSidebarProps> = ({
+export const CurriculumSidebar = React.memo(function CurriculumSidebar({
   sections,
   lessons,
   currentLesson,
@@ -29,7 +29,7 @@ export const CurriculumSidebar: React.FC<CurriculumSidebarProps> = ({
   onResetProgress,
   onClose,
   width,
-}) => {
+}: CurriculumSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() => new Set());
   const [confirmReset, setConfirmReset] = useState(false);
@@ -80,6 +80,17 @@ export const CurriculumSidebar: React.FC<CurriculumSidebarProps> = ({
     }
     return map;
   }, [sections, lessons, searchQuery]);
+
+  const sectionStats = useMemo(() => {
+    const stats = new Map<string, { total: number; solved: number }>();
+    for (const l of lessons) {
+      const s = stats.get(l.sectionId) ?? { total: 0, solved: 0 };
+      s.total++;
+      if (solvedIds.has(l.id)) s.solved++;
+      stats.set(l.sectionId, s);
+    }
+    return stats;
+  }, [lessons, solvedIds]);
 
   const solvedCount = solvedIds.size;
   const totalCount = lessons.length;
@@ -159,9 +170,8 @@ export const CurriculumSidebar: React.FC<CurriculumSidebarProps> = ({
               const secLessons = lessonsBySection.get(sec.id);
               if (!secLessons) return null;
 
-              const allSecLessons = lessons.filter((l) => l.sectionId === sec.id);
-              const secSolved = allSecLessons.filter((l) => solvedIds.has(l.id)).length;
-              const isSectionComplete = secSolved === allSecLessons.length;
+              const { total: secTotal, solved: secSolved } = sectionStats.get(sec.id)!;
+              const isSectionComplete = secSolved === secTotal;
               const isCollapsed = !searchQuery.trim() && collapsedSections.has(sec.id);
 
               return (
@@ -203,7 +213,7 @@ export const CurriculumSidebar: React.FC<CurriculumSidebarProps> = ({
                             : { backgroundColor: 'var(--bg-code)' }
                         }
                       >
-                        {secSolved}/{allSecLessons.length}
+                        {secSolved}/{secTotal}
                       </span>
                       {isCollapsed ? (
                         <ChevronRight className="h-3.5 w-3.5 text-[var(--text-muted)]" />
@@ -317,4 +327,4 @@ export const CurriculumSidebar: React.FC<CurriculumSidebarProps> = ({
       </div>
     </aside>
   );
-};
+});

@@ -1,9 +1,8 @@
-import type { Lesson } from '../../types/course';
+import type { LessonData } from '../../types/course';
 
-export const SECTION_7_HEAPS: Lesson[] = [
+export const SECTION_7_HEAPS: LessonData[] = [
   {
     id: 'heap-push',
-    index: 31,
     sectionId: 'heaps',
     title: 'Heap Push',
     blocks: [
@@ -106,7 +105,6 @@ _expected = 99`,
   },
   {
     id: 'heap-pop',
-    index: 32,
     sectionId: 'heaps',
     title: 'Heap Pop',
     blocks: [
@@ -202,7 +200,6 @@ _expected = []`,
   },
   {
     id: 'heapify',
-    index: 33,
     sectionId: 'heaps',
     title: 'Heapify',
     blocks: [
@@ -343,7 +340,6 @@ _expected = [-1, 2, 2, 4, 5]`,
   },
   {
     id: 'max-heap',
-    index: 34,
     sectionId: 'heaps',
     title: 'Max Heap',
     blocks: [
@@ -442,7 +438,6 @@ _expected = []`,
   },
   {
     id: 'custom-heap',
-    index: 35,
     sectionId: 'heaps',
     title: 'Custom Heap',
     blocks: [
@@ -545,7 +540,6 @@ _expected = ([], [-7])`,
   },
   {
     id: 'heap-n-smallest',
-    index: 36,
     sectionId: 'heaps',
     title: 'Heap N Smallest',
     blocks: [
@@ -694,7 +688,6 @@ _expected = [3, -1]`,
   },
   {
     id: 'heap-n-largest',
-    index: 37,
     sectionId: 'heaps',
     title: 'Heap N Largest',
     blocks: [

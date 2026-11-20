@@ -1,9 +1,8 @@
-import type { Lesson } from '../../types/course';
+import type { LessonData } from '../../types/course';
 
-export const SECTION_4_STACKS_QUEUES: Lesson[] = [
+export const SECTION_4_STACKS_QUEUES: LessonData[] = [
   {
     id: 'stack-push-and-pop',
-    index: 17,
     sectionId: 'stacks-and-queues',
     title: 'Stack Push and Pop',
     blocks: [
@@ -99,7 +98,6 @@ _expected = ([42], [])`,
   },
   {
     id: 'queue-enqueue-and-dequeue',
-    index: 18,
     sectionId: 'stacks-and-queues',
     title: 'Queue Enqueue and Dequeue',
     blocks: [
@@ -220,7 +218,6 @@ _expected = deque([])`,
   },
   {
     id: 'double-ended-queue',
-    index: 19,
     sectionId: 'stacks-and-queues',
     title: 'Double Ended Queue',
     blocks: [

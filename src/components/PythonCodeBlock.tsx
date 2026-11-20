@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Check, Copy, ArrowDownToLine } from 'lucide-react';
 
 interface PythonCodeBlockProps {
@@ -79,7 +79,7 @@ function tokenizePython(code: string): Token[] {
 }
 
 const TOKEN_COLORS: Record<Token['type'], string> = {
-  comment: 'text-[#6a9955] dark:text-[#6a9955]',
+  comment: 'text-[#6a9955]',
   string: 'text-[#b45309] dark:text-[#ce9178]',
   keyword: 'text-[#7c3aed] dark:text-[#c586c0]',
   builtin: 'text-[#0284c7] dark:text-[#4ec9b0]',
@@ -106,7 +106,7 @@ export const PythonCodeBlock: React.FC<PythonCodeBlockProps> = ({
     }
   };
 
-  const tokens = tokenizePython(code.trimEnd());
+  const tokens = useMemo(() => tokenizePython(code.trimEnd()), [code]);
 
   return (
     <div

@@ -1,13 +1,12 @@
 import type { Completion, CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 import { syntaxTree } from '@codemirror/language';
-import { StateField, type EditorState } from '@codemirror/state';
+import { StateField, type EditorState, type Text } from '@codemirror/state';
 import { showTooltip, type Tooltip } from '@codemirror/view';
 
 type ParamDef = {
   name: string;
   detail?: string;
   info?: string;
-  kwOnly?: boolean;
 };
 
 type CallableDef = {
@@ -19,8 +18,8 @@ type CallableDef = {
 };
 
 const SORT_PARAMS: ParamDef[] = [
-  { name: 'key', detail: 'Callable | None = None', info: 'Function of one argument used to extract a comparison key from each element.', kwOnly: true },
-  { name: 'reverse', detail: 'bool = False', info: 'If True, sort elements in descending order.', kwOnly: true },
+  { name: 'key', detail: 'Callable | None = None', info: 'Function of one argument used to extract a comparison key from each element.' },
+  { name: 'reverse', detail: 'bool = False', info: 'If True, sort elements in descending order.' },
 ];
 
 const LIST_METHODS: CallableDef[] = [
@@ -237,12 +236,12 @@ const PYTHON_BUILTINS: CallableDef[] = [
   { label: 'len', type: 'function', detail: '(s) -> int', info: 'Return the number of items in a container.', params: [{ name: 's', detail: 'Sized' }] },
   { label: 'range', type: 'function', detail: '(start, stop, step=1)', info: 'Return an immutable sequence of integers.', params: [{ name: 'start', detail: 'int' }, { name: 'stop', detail: 'int' }, { name: 'step', detail: 'int = 1' }] },
   { label: 'enumerate', type: 'function', detail: '(iterable, start=0)', info: 'Yield (index, item) pairs from iterable.', params: [{ name: 'iterable', detail: 'Iterable' }, { name: 'start', detail: 'int = 0' }] },
-  { label: 'zip', type: 'function', detail: '(*iterables, strict=False)', info: 'Iterate over multiple iterables in parallel.', params: [{ name: 'strict', detail: 'bool = False', kwOnly: true }] },
-  { label: 'min', type: 'function', detail: '(iterable | *args, key=None, default=...)', info: 'Return the smallest item.', params: [{ name: 'key', detail: 'Callable | None = None', kwOnly: true }, { name: 'default', detail: 'T', kwOnly: true }] },
-  { label: 'max', type: 'function', detail: '(iterable | *args, key=None, default=...)', info: 'Return the largest item.', params: [{ name: 'key', detail: 'Callable | None = None', kwOnly: true }, { name: 'default', detail: 'T', kwOnly: true }] },
+  { label: 'zip', type: 'function', detail: '(*iterables, strict=False)', info: 'Iterate over multiple iterables in parallel.', params: [{ name: 'strict', detail: 'bool = False' }] },
+  { label: 'min', type: 'function', detail: '(iterable | *args, key=None, default=...)', info: 'Return the smallest item.', params: [{ name: 'key', detail: 'Callable | None = None' }, { name: 'default', detail: 'T' }] },
+  { label: 'max', type: 'function', detail: '(iterable | *args, key=None, default=...)', info: 'Return the largest item.', params: [{ name: 'key', detail: 'Callable | None = None' }, { name: 'default', detail: 'T' }] },
   { label: 'abs', type: 'function', detail: '(x)', info: 'Return the absolute value of a number.', params: [{ name: 'x', detail: 'int | float' }] },
   { label: 'sum', type: 'function', detail: '(iterable, start=0)', info: 'Return the sum of items in iterable.', params: [{ name: 'iterable', detail: 'Iterable' }, { name: 'start', detail: 'int = 0' }] },
-  { label: 'print', type: 'function', detail: '(*values, sep=" ", end="\\n")', info: 'Print values to standard output.', params: [{ name: 'sep', detail: 'str = " "', kwOnly: true }, { name: 'end', detail: 'str = "\\n"', kwOnly: true }, { name: 'flush', detail: 'bool = False', kwOnly: true }] },
+  { label: 'print', type: 'function', detail: '(*values, sep=" ", end="\\n")', info: 'Print values to standard output.', params: [{ name: 'sep', detail: 'str = " "' }, { name: 'end', detail: 'str = "\\n"' }, { name: 'flush', detail: 'bool = False' }] },
   { label: 'list', type: 'class', detail: '(iterable=())', info: 'Construct a new list.' },
   { label: 'dict', type: 'class', detail: '(mapping | iterable)', info: 'Construct a new dictionary.' },
   { label: 'set', type: 'class', detail: '(iterable=())', info: 'Construct a new set of unique elements.' },
@@ -264,11 +263,8 @@ const PYTHON_BUILTINS: CallableDef[] = [
   { label: 'divmod', type: 'function', detail: '(a, b) -> (q, r)', info: 'Return quotient and remainder tuple.' },
   { label: 'pow', type: 'function', detail: '(base, exp, mod=None)', info: 'Return base to the power exp (optionally modulo mod).', params: [{ name: 'base', detail: 'int | float' }, { name: 'exp', detail: 'int | float' }, { name: 'mod', detail: 'int | None = None' }] },
   // Common imported classes so calls like deque(..., maxlen=...) get parameter hints too
-  { label: 'deque', type: 'class', detail: '(iterable=(), maxlen=None)', info: 'Double-ended queue from collections.', params: [{ name: 'iterable', detail: 'Iterable = ()' }, { name: 'maxlen', detail: 'int | None = None' }] },
-  { label: 'defaultdict', type: 'class', detail: '(default_factory)', info: 'Dict with automatic default values from collections.', params: [{ name: 'default_factory', detail: 'Callable' }] },
-  { label: 'Counter', type: 'class', detail: '(iterable=None)', info: 'Frequency counter dict from collections.', params: [{ name: 'iterable', detail: 'Iterable | Mapping' }] },
-  { label: 'SortedDict', type: 'class', detail: '(*args, **kwargs)', info: 'Sorted dictionary from sortedcontainers.' },
-  { label: 'SortedSet', type: 'class', detail: '(iterable=None, key=None)', info: 'Sorted set from sortedcontainers.', params: [{ name: 'iterable', detail: 'Iterable = None' }, { name: 'key', detail: 'Callable | None = None' }] },
+  ...MODULE_MEMBERS.collections.filter((m) => ['deque', 'defaultdict', 'Counter'].includes(m.label)),
+  ...MODULE_MEMBERS.sortedcontainers.filter((m) => ['SortedDict', 'SortedSet'].includes(m.label)),
 ];
 
 const BUILTIN_MAP = new Map<string, CallableDef>(
@@ -284,17 +280,7 @@ const PYTHON_KEYWORDS: Completion[] = [
 
 function normalizeTypeName(rawType: string): string | null {
   const base = rawType.split('[')[0].trim().toLowerCase();
-  if (base === 'list') return 'list';
-  if (base === 'dict') return 'dict';
-  if (base === 'defaultdict') return 'defaultdict';
-  if (base === 'counter') return 'counter';
-  if (base === 'set') return 'set';
-  if (base === 'deque') return 'deque';
-  if (base === 'str') return 'str';
-  if (base === 'tuple') return 'tuple';
-  if (base === 'sorteddict') return 'sorteddict';
-  if (base === 'sortedset') return 'sortedset';
-  return null;
+  return Object.hasOwn(TYPE_METHODS, base) ? base : null;
 }
 
 interface AnalyzedDoc {
@@ -409,6 +395,19 @@ function analyzeDocument(docText: string): AnalyzedDoc {
   return { varTypes, locals, userFunctions };
 }
 
+/** CodeMirror documents are immutable, so one analysis per Text is reused by completion and signature help. */
+const analysisCache = new WeakMap<Text, { text: string; analyzed: AnalyzedDoc }>();
+
+function analyze(doc: Text): { text: string; analyzed: AnalyzedDoc } {
+  let entry = analysisCache.get(doc);
+  if (!entry) {
+    const text = doc.toString();
+    entry = { text, analyzed: analyzeDocument(text) };
+    analysisCache.set(doc, entry);
+  }
+  return entry;
+}
+
 function isInsideCommentOrString(lineBefore: string): boolean {
   let inSingle = false;
   let inDouble = false;
@@ -430,11 +429,20 @@ function isInsideCommentOrString(lineBefore: string): boolean {
   return inSingle || inDouble;
 }
 
+/** Completion is suppressed in (or right after) comments and strings: syntax tree first, then a line scan for unterminated strings. */
+function inCommentOrString(state: EditorState, pos: number): boolean {
+  const node = syntaxTree(state).resolveInner(pos, -1);
+  if (node.name === 'Comment' || node.name === 'String' || node.name === 'FormatString') {
+    return true;
+  }
+  const line = state.doc.lineAt(pos);
+  return isInsideCommentOrString(line.text.slice(0, pos - line.from));
+}
+
 interface CallContext {
   openParenPos: number;
   receiver: string | null;
   callee: string;
-  argIndex: number;
   usedKwargs: Set<string>;
   inKeywordValue: boolean;
 }
@@ -496,7 +504,6 @@ function findEnclosingCall(docText: string, pos: number): CallContext | null {
   let depth = 0;
   let sQuote = false;
   let dQuote = false;
-  let argIndex = 0;
   let currentArgStart = 0;
   const usedKwargs = new Set<string>();
 
@@ -525,7 +532,6 @@ function findEnclosingCall(docText: string, pos: number): CallContext | null {
     else if (ch === ')' || ch === ']' || ch === '}') depth = Math.max(0, depth - 1);
     else if (ch === ',' && depth === 0) {
       recordKwarg(inside.slice(currentArgStart, i));
-      argIndex++;
       currentArgStart = i + 1;
     }
   }
@@ -537,22 +543,35 @@ function findEnclosingCall(docText: string, pos: number): CallContext | null {
     openParenPos,
     receiver,
     callee,
-    argIndex,
     usedKwargs,
     inKeywordValue,
   };
 }
 
+/**
+ * Members available on `receiver`: a known module, else the receiver's inferred
+ * type, else every common method. `specific` is false for the generic fallback.
+ */
+function moduleMembers(name: string): CallableDef[] | undefined {
+  return Object.hasOwn(MODULE_MEMBERS, name) ? MODULE_MEMBERS[name] : undefined;
+}
+
+function membersFor(
+  receiver: string,
+  analyzed: AnalyzedDoc
+): { members: CallableDef[]; specific: boolean } {
+  const inferred = analyzed.varTypes.get(receiver);
+  const known =
+    moduleMembers(receiver) ??
+    (inferred && Object.hasOwn(TYPE_METHODS, inferred) ? TYPE_METHODS[inferred] : undefined);
+  return known ? { members: known, specific: true } : { members: ALL_COMMON_METHODS, specific: false };
+}
+
 function resolveCallable(call: CallContext, analyzed: AnalyzedDoc): CallableDef | null {
   if (call.receiver) {
-    if (MODULE_MEMBERS[call.receiver]) {
-      return MODULE_MEMBERS[call.receiver].find((m) => m.label === call.callee) ?? null;
-    }
-    const inferredType = analyzed.varTypes.get(call.receiver);
-    if (inferredType && TYPE_METHODS[inferredType]) {
-      const found = TYPE_METHODS[inferredType].find((m) => m.label === call.callee);
-      if (found) return found;
-    }
+    const found = membersFor(call.receiver, analyzed).members.find((m) => m.label === call.callee);
+    // Modules are exhaustive; for inferred types fall back to any common method.
+    if (found || moduleMembers(call.receiver)) return found ?? null;
     return ALL_COMMON_METHODS.find((m) => m.label === call.callee) ?? null;
   }
 
@@ -569,54 +588,42 @@ function toCompletions(defs: CallableDef[], boost = 0): Completion[] {
   }));
 }
 
+/** Member completion lists are static per member table; build each once. */
+const memberCompletionCache = new Map<CallableDef[], Completion[]>();
+
+function memberCompletions(defs: CallableDef[], boost: number): Completion[] {
+  let list = memberCompletionCache.get(defs);
+  if (!list) {
+    list = toCompletions(defs, boost);
+    memberCompletionCache.set(defs, list);
+  }
+  return list;
+}
+
+const BUILTIN_COMPLETIONS: Completion[] = PYTHON_BUILTINS.map((b) => ({
+  label: b.label,
+  type: b.type ?? 'function',
+  detail: b.detail,
+  info: b.info,
+  boost: 1,
+}));
+
 export function pythonCompletionSource(
   context: CompletionContext
 ): CompletionResult | null {
-  const nodeBefore = syntaxTree(context.state).resolveInner(context.pos, -1);
-  if (
-    nodeBefore.name === 'Comment' ||
-    nodeBefore.name === 'String' ||
-    nodeBefore.name === 'FormatString'
-  ) {
-    return null;
-  }
+  if (inCommentOrString(context.state, context.pos)) return null;
 
-  const line = context.state.doc.lineAt(context.pos);
-  const lineBefore = line.text.slice(0, context.pos - line.from);
-  if (isInsideCommentOrString(lineBefore)) {
-    return null;
-  }
-
-  const docText = context.state.doc.toString();
-  const analyzed = analyzeDocument(docText);
+  const { text: docText, analyzed } = analyze(context.state.doc);
 
   // Case 1: Member / dot completion (`words.`, `words.sor`, `heapq.heap`)
   const memberMatch = context.matchBefore(/([A-Za-z_][A-Za-z0-9_]*)\.[A-Za-z0-9_]*/);
   if (memberMatch) {
     const dotIndex = memberMatch.text.indexOf('.');
     const receiver = memberMatch.text.slice(0, dotIndex);
-    const from = memberMatch.from + dotIndex + 1;
-
-    if (MODULE_MEMBERS[receiver]) {
-      return {
-        from,
-        options: toCompletions(MODULE_MEMBERS[receiver], 2),
-        validFor: /^[A-Za-z0-9_]*$/,
-      };
-    }
-
-    const inferredType = analyzed.varTypes.get(receiver);
-    if (inferredType && TYPE_METHODS[inferredType]) {
-      return {
-        from,
-        options: toCompletions(TYPE_METHODS[inferredType], 2),
-        validFor: /^[A-Za-z0-9_]*$/,
-      };
-    }
-
+    const { members, specific } = membersFor(receiver, analyzed);
     return {
-      from,
-      options: toCompletions(ALL_COMMON_METHODS, 0),
+      from: memberMatch.from + dotIndex + 1,
+      options: memberCompletions(members, specific ? 2 : 0),
       validFor: /^[A-Za-z0-9_]*$/,
     };
   }
@@ -662,23 +669,10 @@ export function pythonCompletionSource(
     }
   }
 
-  for (const b of PYTHON_BUILTINS) {
-    if (!seen.has(b.label)) {
-      seen.add(b.label);
-      options.push({
-        label: b.label,
-        type: b.type ?? 'function',
-        detail: b.detail,
-        info: b.info,
-        boost: 1,
-      });
-    }
-  }
-
-  for (const kw of PYTHON_KEYWORDS) {
-    if (!seen.has(kw.label)) {
-      seen.add(kw.label);
-      options.push(kw);
+  for (const option of [...BUILTIN_COMPLETIONS, ...PYTHON_KEYWORDS]) {
+    if (!seen.has(option.label)) {
+      seen.add(option.label);
+      options.push(option);
     }
   }
 
@@ -694,25 +688,37 @@ export function pythonCompletionSource(
  * (e.g. `sort(key=None, reverse=False) -> None`) above the cursor whenever
  * the user is typing arguments inside `(...)`.
  */
-function buildSignatureTooltip(state: EditorState): Tooltip | null {
+interface SignatureHelp {
+  callable: CallableDef;
+  tooltip: Tooltip;
+}
+
+function buildSignatureHelp(state: EditorState, prev: SignatureHelp | null): SignatureHelp | null {
   const sel = state.selection.main;
   if (!sel.empty) return null;
 
   const pos = sel.head;
   const line = state.doc.lineAt(pos);
-  const lineBefore = line.text.slice(0, pos - line.from);
-  if (isInsideCommentOrString(lineBefore)) return null;
+  if (isInsideCommentOrString(line.text.slice(0, pos - line.from))) return null;
 
-  const docText = state.doc.toString();
+  const { text: docText, analyzed } = analyze(state.doc);
   const callCtx = findEnclosingCall(docText, pos);
   if (!callCtx) return null;
 
-  const analyzed = analyzeDocument(docText);
   const callable = resolveCallable(callCtx, analyzed);
   if (!callable) return null;
 
+  // Same call, same signature: keep the existing tooltip so its DOM isn't rebuilt per keystroke.
+  if (prev && prev.callable === callable && prev.tooltip.pos === callCtx.openParenPos) {
+    return prev;
+  }
+
+  return { callable, tooltip: signatureTooltip(callCtx.openParenPos, callable) };
+}
+
+function signatureTooltip(pos: number, callable: CallableDef): Tooltip {
   return {
-    pos: callCtx.openParenPos,
+    pos,
     above: true,
     strictSide: false,
     arrow: false,
@@ -747,13 +753,13 @@ function buildSignatureTooltip(state: EditorState): Tooltip | null {
   };
 }
 
-export const pythonSignatureHelp = StateField.define<Tooltip | null>({
+export const pythonSignatureHelp = StateField.define<SignatureHelp | null>({
   create(state) {
-    return buildSignatureTooltip(state);
+    return buildSignatureHelp(state, null);
   },
   update(value, tr) {
     if (!tr.docChanged && !tr.selection) return value;
-    return buildSignatureTooltip(tr.state);
+    return buildSignatureHelp(tr.state, value);
   },
-  provide: (f) => showTooltip.from(f),
+  provide: (f) => showTooltip.from(f, (help) => help?.tooltip ?? null),
 });

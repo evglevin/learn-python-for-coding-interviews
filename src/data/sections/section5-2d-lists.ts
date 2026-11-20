@@ -1,9 +1,8 @@
-import type { Lesson } from '../../types/course';
+import type { LessonData } from '../../types/course';
 
-export const SECTION_5_2D_LISTS: Lesson[] = [
+export const SECTION_5_2D_LISTS: LessonData[] = [
   {
     id: 'multi-dimensional-list',
-    index: 20,
     sectionId: '2d-lists',
     title: 'Multi-Dimensional List',
     blocks: [
@@ -115,7 +114,6 @@ _expected = [1, 2, 3]`,
   },
   {
     id: '2d-grid',
-    index: 21,
     sectionId: '2d-lists',
     title: '2D Grid',
     blocks: [
@@ -231,7 +229,6 @@ _expected = []`,
   },
   {
     id: 'nested-list-comprehension',
-    index: 22,
     sectionId: '2d-lists',
     title: 'Nested List Comprehension',
     blocks: [

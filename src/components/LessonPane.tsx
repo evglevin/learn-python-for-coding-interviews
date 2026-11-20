@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   FileText,
   Lightbulb,
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { Lesson } from '../types/course';
 import { PythonCodeBlock } from './PythonCodeBlock';
+import { PanelTab } from './PanelTab';
 
 interface LessonPaneProps {
   lesson: Lesson;
@@ -68,19 +69,14 @@ function renderInline(text: string): React.ReactNode[] {
   return parts;
 }
 
-export const LessonPane: React.FC<LessonPaneProps> = ({
+/** Render with `key={lesson.id}` so tab and revealed hints reset per lesson. */
+export const LessonPane = React.memo(function LessonPane({
   lesson,
   isSolved,
   onApplySolution,
-}) => {
+}: LessonPaneProps) {
   const [activeTab, setActiveTab] = useState<LeftTab>('question');
   const [revealedHints, setRevealedHints] = useState<number>(0);
-
-  // Reset tab to Question & hide hints whenever user changes lesson
-  useEffect(() => {
-    setActiveTab('question');
-    setRevealedHints(0);
-  }, [lesson.id]);
 
   return (
     <div
@@ -101,31 +97,16 @@ export const LessonPane: React.FC<LessonPaneProps> = ({
             { id: 'solution', label: 'Solution', icon: Lightbulb },
             { id: 'hints', label: `Hints (${lesson.hints.length})`, icon: Sparkles },
           ] as const
-        ).map((tab) => {
-          const Icon = tab.icon;
-          const active = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`relative flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-medium transition-colors cursor-pointer ${
-                active
-                  ? 'text-[var(--text-primary)]'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              <span>{tab.label}</span>
-              {active && (
-                <span
-                  className="absolute right-2 bottom-0 left-2 h-[2px] rounded-full"
-                  style={{ backgroundColor: 'var(--accent-tab)' }}
-                />
-              )}
-            </button>
-          );
-        })}
+        ).map((tab) => (
+          <PanelTab
+            key={tab.id}
+            active={activeTab === tab.id}
+            icon={tab.icon}
+            label={tab.label}
+            onClick={() => setActiveTab(tab.id)}
+            padding="px-3.5 py-2.5"
+          />
+        ))}
       </div>
 
       {/* Scrollable Content */}
@@ -348,4 +329,4 @@ export const LessonPane: React.FC<LessonPaneProps> = ({
       </div>
     </div>
   );
-};
+});

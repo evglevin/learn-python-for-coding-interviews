@@ -1,9 +1,8 @@
-import type { Lesson } from '../../types/course';
+import type { LessonData } from '../../types/course';
 
-export const SECTION_1_SORTING: Lesson[] = [
+export const SECTION_1_SORTING: LessonData[] = [
   {
     id: 'sort-ascending',
-    index: 0,
     sectionId: 'sorting',
     title: 'Sort Ascending',
     blocks: [
@@ -152,7 +151,6 @@ _expected = ([], [42])`,
   },
   {
     id: 'sort-descending',
-    index: 1,
     sectionId: 'sorting',
     title: 'Sort Descending',
     blocks: [
@@ -292,7 +290,6 @@ _expected = []`,
   },
   {
     id: 'sort-custom',
-    index: 2,
     sectionId: 'sorting',
     title: 'Sort Custom',
     blocks: [
@@ -423,7 +420,6 @@ _expected = ([], [-7])`,
   },
   {
     id: 'sort-lambda',
-    index: 3,
     sectionId: 'sorting',
     title: 'Sort Lambda',
     blocks: [
@@ -558,7 +554,6 @@ _expected = [[1, 9], [1, 4], [1, 2], [3, 10], [3, 5]]`,
   },
   {
     id: 'sorted-copy',
-    index: 4,
     sectionId: 'sorting',
     title: 'Sorted Copy',
     blocks: [

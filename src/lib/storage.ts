@@ -9,124 +9,150 @@ const STORAGE_KEYS = {
   SIDEBAR_OPEN: 'py_interviews_sidebar_open_v1',
 } as const;
 
-export function loadSolvedIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.SOLVED);
-    if (!raw) return new Set();
-    const arr = JSON.parse(raw);
-    return new Set(Array.isArray(arr) ? arr : []);
-  } catch {
-    return new Set();
-  }
-}
+export const FONT_SIZE_MIN = 12;
+export const FONT_SIZE_MAX = 22;
+const FONT_SIZE_DEFAULT = 14;
 
-export function saveSolvedIds(solved: Set<string>): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.SOLVED, JSON.stringify([...solved]));
-  } catch {
-    // ignore quota errors
-  }
-}
+/** Debounce window for persisting editor code, which changes on every keystroke. */
+const TABS_WRITE_DELAY_MS = 400;
 
-export function loadLessonTabs(lessonId: string, starterCode: string): SolutionTab[] {
+function read(key: string): string | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.TABS);
-    if (raw) {
-      const map = JSON.parse(raw) as Record<string, SolutionTab[]>;
-      if (Array.isArray(map[lessonId]) && map[lessonId].length > 0) {
-        return map[lessonId];
-      }
-    }
-  } catch {
-    // fallback to default
-  }
-  return [{ id: 'tab-1', name: 'Solution 1', code: starterCode }];
-}
-
-export function saveLessonTabs(lessonId: string, tabs: SolutionTab[]): void {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.TABS);
-    const map: Record<string, SolutionTab[]> = raw ? JSON.parse(raw) : {};
-    map[lessonId] = tabs;
-    localStorage.setItem(STORAGE_KEYS.TABS, JSON.stringify(map));
-  } catch {
-    // ignore quota errors
-  }
-}
-
-export function loadActiveLessonId(): string | null {
-  try {
-    return localStorage.getItem(STORAGE_KEYS.ACTIVE_LESSON);
+    return localStorage.getItem(key);
   } catch {
     return null;
   }
 }
 
-export function saveActiveLessonId(lessonId: string): void {
+function write(key: string, value: string): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.ACTIVE_LESSON, lessonId);
+    localStorage.setItem(key, value);
+  } catch {
+    // ignore quota / privacy-mode errors
+  }
+}
+
+function remove(key: string): void {
+  try {
+    localStorage.removeItem(key);
   } catch {
     // ignore
   }
+}
+
+function readJson(key: string): unknown {
+  const raw = read(key);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function loadSolvedIds(): Set<string> {
+  const arr = readJson(STORAGE_KEYS.SOLVED);
+  return new Set(Array.isArray(arr) ? arr : []);
+}
+
+export function saveSolvedIds(solved: Set<string>): void {
+  write(STORAGE_KEYS.SOLVED, JSON.stringify([...solved]));
+}
+
+// ---------------------------------------------------------------------------
+// Per-lesson solution tabs
+//
+// All lessons' tabs live under one key. The map is parsed once and kept in
+// memory; writes are debounced and flushed when the page is hidden, so a
+// keystroke costs one in-memory assignment instead of a full parse/serialize.
+// ---------------------------------------------------------------------------
+
+let tabsCache: Record<string, SolutionTab[]> | null = null;
+let tabsWriteTimer: ReturnType<typeof setTimeout> | null = null;
+
+function getTabsMap(): Record<string, SolutionTab[]> {
+  if (!tabsCache) {
+    const parsed = readJson(STORAGE_KEYS.TABS);
+    tabsCache =
+      parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? (parsed as Record<string, SolutionTab[]>)
+        : {};
+  }
+  return tabsCache;
+}
+
+function flushTabs(): void {
+  if (tabsWriteTimer === null) return;
+  clearTimeout(tabsWriteTimer);
+  tabsWriteTimer = null;
+  write(STORAGE_KEYS.TABS, JSON.stringify(getTabsMap()));
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', flushTabs);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushTabs();
+  });
+}
+
+export function defaultTabs(starterCode: string): SolutionTab[] {
+  return [{ id: 'tab-1', name: 'Solution 1', code: starterCode }];
+}
+
+export function loadLessonTabs(lessonId: string, starterCode: string): SolutionTab[] {
+  const saved = getTabsMap()[lessonId];
+  return Array.isArray(saved) && saved.length > 0 ? saved : defaultTabs(starterCode);
+}
+
+export function saveLessonTabs(lessonId: string, tabs: SolutionTab[]): void {
+  getTabsMap()[lessonId] = tabs;
+  if (tabsWriteTimer === null) {
+    tabsWriteTimer = setTimeout(flushTabs, TABS_WRITE_DELAY_MS);
+  }
+}
+
+export function loadActiveLessonId(): string | null {
+  return read(STORAGE_KEYS.ACTIVE_LESSON);
+}
+
+export function saveActiveLessonId(lessonId: string): void {
+  write(STORAGE_KEYS.ACTIVE_LESSON, lessonId);
 }
 
 export function loadTheme(): 'dark' | 'light' {
-  try {
-    const val = localStorage.getItem(STORAGE_KEYS.THEME);
-    return val === 'light' ? 'light' : 'dark';
-  } catch {
-    return 'dark';
-  }
+  return read(STORAGE_KEYS.THEME) === 'light' ? 'light' : 'dark';
 }
 
 export function saveTheme(theme: 'dark' | 'light'): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.THEME, theme);
-  } catch {
-    // ignore
-  }
+  write(STORAGE_KEYS.THEME, theme);
 }
 
 export function loadFontSize(): number {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.FONT_SIZE);
-    const parsed = raw ? Number(raw) : 14;
-    return Number.isFinite(parsed) && parsed >= 12 && parsed <= 22 ? parsed : 14;
-  } catch {
-    return 14;
-  }
+  const parsed = Number(read(STORAGE_KEYS.FONT_SIZE) ?? FONT_SIZE_DEFAULT);
+  return Number.isFinite(parsed) && parsed >= FONT_SIZE_MIN && parsed <= FONT_SIZE_MAX
+    ? parsed
+    : FONT_SIZE_DEFAULT;
 }
 
 export function saveFontSize(size: number): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.FONT_SIZE, String(size));
-  } catch {
-    // ignore
-  }
+  write(STORAGE_KEYS.FONT_SIZE, String(size));
 }
 
 export function loadSidebarOpen(): boolean {
-  try {
-    const val = localStorage.getItem(STORAGE_KEYS.SIDEBAR_OPEN);
-    return val === null ? true : val === 'true';
-  } catch {
-    return true;
-  }
+  const val = read(STORAGE_KEYS.SIDEBAR_OPEN);
+  return val === null || val === 'true';
 }
 
 export function saveSidebarOpen(open: boolean): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.SIDEBAR_OPEN, String(open));
-  } catch {
-    // ignore
-  }
+  write(STORAGE_KEYS.SIDEBAR_OPEN, String(open));
 }
 
 export function clearAllProgress(): void {
-  try {
-    localStorage.removeItem(STORAGE_KEYS.SOLVED);
-    localStorage.removeItem(STORAGE_KEYS.TABS);
-  } catch {
-    // ignore
+  if (tabsWriteTimer !== null) {
+    clearTimeout(tabsWriteTimer);
+    tabsWriteTimer = null;
   }
+  tabsCache = {};
+  remove(STORAGE_KEYS.SOLVED);
+  remove(STORAGE_KEYS.TABS);
 }

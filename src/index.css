@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Make `dark:` utilities follow the in-app theme toggle (the .dark class on <html>), not the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --bg-canvas: #f3f4f6;
   --bg-topbar: #ffffff;

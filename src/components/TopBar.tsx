@@ -12,10 +12,9 @@ import {
   RotateCcw,
   Terminal,
 } from 'lucide-react';
-import type { Lesson, Section } from '../types/course';
+import type { Section } from '../types/course';
 
 interface TopBarProps {
-  lesson: Lesson;
   section: Section;
   positionInSection: number;
   sectionTotal: number;
@@ -37,7 +36,7 @@ function formatSeconds(totalSeconds: number): string {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({
+export const TopBar = React.memo(function TopBar({
   section,
   positionInSection,
   sectionTotal,
@@ -51,7 +50,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onToggleSidebar,
   theme,
   onToggleTheme,
-}) => {
+}: TopBarProps) {
   const [timerOpen, setTimerOpen] = useState(false);
   const [timerRunning, setTimerRunning] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -250,4 +249,4 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
     </header>
   );
-};
+});

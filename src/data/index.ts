@@ -9,14 +9,14 @@ import { SECTION_7_HEAPS } from './sections/section7-heaps';
 import { SECTION_8_SORTED_CONTAINERS } from './sections/section8-sorted-containers';
 
 export const SECTIONS: Section[] = [
-  { id: 'sorting', number: 1, title: '1 - Sorting', shortTitle: 'Sorting' },
-  { id: 'pythonic-code', number: 2, title: '2 - Pythonic Code', shortTitle: 'Pythonic Code' },
-  { id: 'lists', number: 3, title: '3 - Lists', shortTitle: 'Lists' },
-  { id: 'stacks-and-queues', number: 4, title: '4 - Stacks and Queues', shortTitle: 'Stacks and Queues' },
-  { id: '2d-lists', number: 5, title: '5 - 2-D Lists', shortTitle: '2-D Lists' },
-  { id: 'hashmaps-and-hashsets', number: 6, title: '6 - Hashmaps and Hashsets', shortTitle: 'Hashmaps and Hashsets' },
-  { id: 'heaps', number: 7, title: '7 - Heaps / Priority Queues', shortTitle: 'Heaps / Priority Queues' },
-  { id: 'sorted-dicts-and-sets', number: 8, title: '8 - Sorted Dicts and Sorted Sets', shortTitle: 'Sorted Dicts and Sorted Sets' },
+  { id: 'sorting', number: 1, shortTitle: 'Sorting' },
+  { id: 'pythonic-code', number: 2, shortTitle: 'Pythonic Code' },
+  { id: 'lists', number: 3, shortTitle: 'Lists' },
+  { id: 'stacks-and-queues', number: 4, shortTitle: 'Stacks and Queues' },
+  { id: '2d-lists', number: 5, shortTitle: '2-D Lists' },
+  { id: 'hashmaps-and-hashsets', number: 6, shortTitle: 'Hashmaps and Hashsets' },
+  { id: 'heaps', number: 7, shortTitle: 'Heaps / Priority Queues' },
+  { id: 'sorted-dicts-and-sets', number: 8, shortTitle: 'Sorted Dicts and Sorted Sets' },
 ];
 
 export const LESSONS: Lesson[] = [
@@ -28,7 +28,7 @@ export const LESSONS: Lesson[] = [
   ...SECTION_6_HASHMAPS_HASHSETS,
   ...SECTION_7_HEAPS,
   ...SECTION_8_SORTED_CONTAINERS,
-];
+].map((lesson, index) => ({ ...lesson, index }));
 
 export function getSectionById(sectionId: string): Section {
   return SECTIONS.find((s) => s.id === sectionId) ?? SECTIONS[0];

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ChevronUp,
   ChevronDown,
@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import type { RunResult, RuntimeStatus } from '../types/course';
+import { PanelTab } from './PanelTab';
 
 interface ConsolePanelProps {
   isOpen: boolean;
@@ -30,7 +31,7 @@ interface ConsolePanelProps {
 
 type ConsoleTab = 'output' | 'tests';
 
-export const ConsolePanel: React.FC<ConsolePanelProps> = ({
+export const ConsolePanel = React.memo(function ConsolePanel({
   isOpen,
   onToggleOpen,
   height,
@@ -42,28 +43,31 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
   onStop,
   hasNextLesson,
   onNextLesson,
-}) => {
+}: ConsolePanelProps) {
   const [activeTab, setActiveTab] = useState<ConsoleTab>('output');
   const [selectedTestIdx, setSelectedTestIdx] = useState(0);
+  const [shownResult, setShownResult] = useState(result);
 
-  // Switch console tab automatically depending on Run vs Submit
-  useEffect(() => {
-    if (!result) return;
-    if (result.mode === 'submit' && result.testResults && result.testResults.length > 0) {
+  const tests = result?.testResults ?? [];
+
+  // When a new result arrives, jump to the relevant tab (adjusted during render,
+  // so the stale tab is never painted).
+  if (result !== shownResult) {
+    setShownResult(result);
+    if (result?.mode === 'submit' && tests.length > 0) {
       setActiveTab('tests');
-      const firstFailed = result.testResults.findIndex((t) => !t.passed);
-      setSelectedTestIdx(firstFailed >= 0 ? firstFailed : 0);
-    } else {
+      setSelectedTestIdx(Math.max(0, tests.findIndex((t) => !t.passed)));
+    } else if (result) {
       setActiveTab('output');
     }
-  }, [result]);
+  }
 
   const isRunning = runtimeStatus === 'running';
   const isDisabled = runtimeStatus === 'loading' || runtimeStatus === 'error';
 
-  const passedTests = result?.testResults?.filter((t) => t.passed).length ?? 0;
-  const totalTests = result?.testResults?.length ?? 0;
-  const selectedTest = result?.testResults?.[selectedTestIdx];
+  const passedTests = tests.filter((t) => t.passed).length;
+  const totalTests = tests.length;
+  const selectedTest = tests[selectedTestIdx];
 
   return (
     <div className="flex shrink-0 flex-col">
@@ -90,40 +94,22 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
             style={{ borderColor: 'var(--border-subtle)' }}
           >
             <div className="flex items-center">
-              <button
-                type="button"
+              <PanelTab
+                active={activeTab === 'output'}
+                icon={Terminal}
+                label="Output"
                 onClick={() => setActiveTab('output')}
-                className={`relative flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors cursor-pointer ${
-                  activeTab === 'output'
-                    ? 'text-[var(--text-primary)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
-                }`}
-              >
-                <Terminal className="h-3.5 w-3.5" />
-                <span>Output</span>
-                {activeTab === 'output' && (
-                  <span
-                    className="absolute right-2 bottom-0 left-2 h-[2px] rounded-full"
-                    style={{ backgroundColor: 'var(--accent-tab)' }}
-                  />
-                )}
-              </button>
-
-              <button
-                type="button"
+              />
+              <PanelTab
+                active={activeTab === 'tests'}
+                icon={FlaskConical}
+                label="Test Cases"
                 onClick={() => setActiveTab('tests')}
-                className={`relative flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors cursor-pointer ${
-                  activeTab === 'tests'
-                    ? 'text-[var(--text-primary)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
-                }`}
               >
-                <FlaskConical className="h-3.5 w-3.5" />
-                <span>Test Cases</span>
-                {result?.testResults && result.testResults.length > 0 && (
+                {totalTests > 0 && (
                   <span
                     className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-semibold ${
-                      result.allTestsPassed
+                      result?.allTestsPassed
                         ? 'bg-emerald-500/15 text-emerald-500'
                         : 'bg-rose-500/15 text-rose-400'
                     }`}
@@ -131,13 +117,7 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
                     {passedTests}/{totalTests}
                   </span>
                 )}
-                {activeTab === 'tests' && (
-                  <span
-                    className="absolute right-2 bottom-0 left-2 h-[2px] rounded-full"
-                    style={{ backgroundColor: 'var(--accent-tab)' }}
-                  />
-                )}
-              </button>
+              </PanelTab>
             </div>
 
             {result && (
@@ -246,7 +226,7 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
             ) : (
               /* Test Cases Tab */
               <div className="space-y-3">
-                {!result.testResults || result.testResults.length === 0 ? (
+                {totalTests === 0 ? (
                   <div className="py-6 text-center text-xs text-[var(--text-muted)]">
                     Click <strong className="text-[var(--text-secondary)]">Submit</strong> to evaluate your code against all unit & edge-case tests.
                   </div>
@@ -301,7 +281,7 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
 
                     {/* Case Pills */}
                     <div className="flex flex-wrap gap-1.5">
-                      {result.testResults.map((tc, idx) => (
+                      {tests.map((tc, idx) => (
                         <button
                           key={idx}
                           type="button"
@@ -408,7 +388,7 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
         </div>
       )}
 
-      {/* Bottom Action Bar (matches NeetCode Console ^ | Run | Submit bar) */}
+      {/* Bottom Action Bar */}
       <div
         className="flex h-12 shrink-0 items-center justify-between border-t px-3.5"
         style={{
@@ -473,4 +453,4 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
       </div>
     </div>
   );
-};
+});
