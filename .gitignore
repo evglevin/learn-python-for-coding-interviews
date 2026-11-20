@@ -1,0 +1,13 @@
+# Dependencies & build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Auto-copied on postinstall / dev / build from node_modules/pyodide
+public/pyodide/
+
+# OS & editor files
+.DS_Store
+*.log
+.env
+.env.*
