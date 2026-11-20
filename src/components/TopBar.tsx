@@ -115,35 +115,39 @@ export const TopBar = React.memo(function TopBar({
           Python for Coding Interviews
         </span>
 
-        <div className="flex items-center gap-0.5">
-          <button
-            type="button"
-            onClick={onPrev}
-            disabled={!hasPrev}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-            title="Previous lesson"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onNext}
-            disabled={!hasNext}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-            title="Next lesson"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+        {!sidebarOpen && (
+          <>
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={onPrev}
+                disabled={!hasPrev}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                title="Previous lesson"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onNext}
+                disabled={!hasNext}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                title="Next lesson"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
 
-        <div className="ml-1 hidden items-center gap-1.5 text-xs sm:flex">
-          <span className="font-medium text-[var(--text-secondary)]">
-            {section.shortTitle}
-          </span>
-          <span className="text-[var(--text-muted)]">
-            ({positionInSection} / {sectionTotal})
-          </span>
-        </div>
+            <div className="ml-1 hidden items-center gap-1.5 text-xs sm:flex">
+              <span className="font-medium text-[var(--text-secondary)]">
+                {section.shortTitle}
+              </span>
+              <span className="text-[var(--text-muted)]">
+                ({positionInSection} / {sectionTotal})
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Right Utility Cluster */}
