@@ -13,6 +13,7 @@ import { PanelTab } from './PanelTab';
 
 interface LessonPaneProps {
   lesson: Lesson;
+  theme: 'dark' | 'light';
   isSolved: boolean;
   onApplySolution: (code: string) => void;
 }
@@ -72,6 +73,7 @@ function renderInline(text: string): React.ReactNode[] {
 /** Render with `key={lesson.id}` so tab and revealed hints reset per lesson. */
 export const LessonPane = React.memo(function LessonPane({
   lesson,
+  theme,
   isSolved,
   onApplySolution,
 }: LessonPaneProps) {
@@ -146,6 +148,7 @@ export const LessonPane = React.memo(function LessonPane({
                   <PythonCodeBlock
                     key={idx}
                     code={block.code}
+                    theme={theme}
                     caption={block.caption}
                   />
                 );
@@ -247,6 +250,7 @@ export const LessonPane = React.memo(function LessonPane({
             </h2>
             <PythonCodeBlock
               code={lesson.solutionCode}
+              theme={theme}
               caption="Python — Reference Solution"
               onApplyToEditor={() => onApplySolution(lesson.solutionCode)}
             />

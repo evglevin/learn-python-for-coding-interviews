@@ -19,15 +19,11 @@ import {
   indentWithTab,
 } from '@codemirror/commands';
 import {
-  python,
-} from '@codemirror/lang-python';
-import {
   indentOnInput,
   bracketMatching,
   foldGutter,
   foldKeymap,
   syntaxHighlighting,
-  HighlightStyle,
   indentUnit,
 } from '@codemirror/language';
 import {
@@ -38,7 +34,7 @@ import {
   completionKeymap,
 } from '@codemirror/autocomplete';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { tags as t } from '@lezer/highlight';
+import { pythonHighlighting, pythonLanguageSupport } from '../lib/pythonHighlighting';
 import { pythonCompletionSource, pythonSignatureHelp } from '../lib/pythonCompletions';
 import {
   RotateCcw,
@@ -82,37 +78,6 @@ interface CodeEditorProps {
   canExpand: boolean;
   onToggleExpand: () => void;
 }
-
-const darkHighlightStyle = HighlightStyle.define([
-  { tag: t.keyword, color: '#c586c0' },
-  { tag: [t.name, t.deleted, t.character, t.macroName], color: '#9cdcfe' },
-  { tag: [t.propertyName], color: '#9cdcfe' },
-  { tag: [t.function(t.variableName), t.function(t.propertyName)], color: '#dcdcaa' },
-  { tag: [t.labelName], color: '#dcdcaa' },
-  { tag: [t.color, t.constant(t.name), t.standard(t.name)], color: '#4fc1ff' },
-  { tag: [t.definition(t.name), t.separator], color: '#d4d4d4' },
-  { tag: [t.typeName, t.className, t.changed, t.annotation, t.modifier, t.self, t.namespace], color: '#4ec9b0' },
-  { tag: [t.number, t.bool], color: '#b5cea8' },
-  { tag: [t.operator, t.operatorKeyword, t.url, t.escape, t.regexp, t.link], color: '#d4d4d4' },
-  { tag: [t.meta, t.comment], color: '#6a9955', fontStyle: 'italic' },
-  { tag: t.strong, fontWeight: 'bold' },
-  { tag: t.emphasis, fontStyle: 'italic' },
-  { tag: [t.atom, t.special(t.variableName)], color: '#569cd6' },
-  { tag: [t.processingInstruction, t.string, t.inserted], color: '#ce9178' },
-  { tag: t.invalid, color: '#f44747' },
-]);
-
-const lightHighlightStyle = HighlightStyle.define([
-  { tag: t.keyword, color: '#7c3aed' },
-  { tag: [t.name, t.propertyName], color: '#1e293b' },
-  { tag: [t.function(t.variableName), t.function(t.propertyName)], color: '#b45309' },
-  { tag: [t.typeName, t.className, t.self, t.namespace], color: '#0284c7' },
-  { tag: [t.number, t.bool], color: '#059669' },
-  { tag: [t.comment], color: '#15803d', fontStyle: 'italic' },
-  { tag: [t.string, t.inserted], color: '#c2410c' },
-  { tag: [t.atom, t.special(t.variableName)], color: '#2563eb' },
-  { tag: t.invalid, color: '#dc2626' },
-]);
 
 const MONO_FONT =
   'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace';
@@ -168,7 +133,7 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
     {
       '&': {
         backgroundColor: isDark ? '#1e1e22' : '#ffffff',
-        color: isDark ? '#e4e4e7' : '#18181b',
+        color: pythonHighlighting[theme].foreground,
         fontSize: `${fontSize}px`,
       },
       '.cm-content': {
@@ -325,7 +290,7 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
 function themeExtensions(theme: 'dark' | 'light', fontSize: number): Extension {
   return [
     makeEditorTheme(theme, fontSize),
-    syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle),
+    syntaxHighlighting(pythonHighlighting[theme].style),
   ];
 }
 
@@ -414,7 +379,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       crosshairCursor(),
       highlightActiveLine(),
       highlightSelectionMatches(),
-      python(),
+      pythonLanguageSupport,
       runShortcut,
       Prec.high(
         keymap.of([

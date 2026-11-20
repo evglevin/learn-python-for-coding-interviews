@@ -555,6 +555,7 @@ export default function App({
                 <LessonPane
                   key={currentLesson.id}
                   lesson={currentLesson}
+                  theme={theme}
                   isSolved={solvedIds.has(currentLesson.id)}
                   onApplySolution={handleApplySolution}
                 />

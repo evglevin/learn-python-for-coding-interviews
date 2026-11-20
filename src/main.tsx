@@ -5,6 +5,7 @@ import App from './App';
 import { getLessonById } from './data';
 import { lessonIdFromUrl, showLessonInUrl } from './lib/lessonUrl';
 import { decodeProgress, takeProgressFromUrl, type IncomingProgress } from './lib/progressLink';
+import { mountPythonHighlighting } from './lib/pythonHighlighting';
 import { loadActiveLessonId, loadTheme, saveActiveLessonId } from './lib/storage';
 
 // Read before anything else rewrites the URL; the payload is stripped so a reload doesn't ask again.
@@ -20,6 +21,7 @@ if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
 
 const initialTheme = loadTheme();
 document.documentElement.classList.toggle('dark', initialTheme === 'dark');
+mountPythonHighlighting(document);
 
 // A lesson link in the URL wins over the lesson last opened on this device.
 const initialLessonId = lessonIdFromUrl() ?? getLessonById(loadActiveLessonId() ?? '').id;
