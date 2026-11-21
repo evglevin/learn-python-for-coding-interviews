@@ -44,7 +44,6 @@ import {
   Minimize2,
   Minus,
   Loader2,
-  CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
 import type { RuntimeStatus, SolutionTab } from '../types/course';
@@ -294,13 +293,13 @@ function themeExtensions(theme: 'dark' | 'light', fontSize: number): Extension {
   ];
 }
 
-const STATUS_UI: Record<
-  RuntimeStatus,
-  { Icon: typeof Loader2; iconClass: string; label: string; labelClass: string }
+const STATUS_UI: Partial<
+  Record<
+    RuntimeStatus,
+    { Icon: typeof Loader2; iconClass: string; label: string; labelClass: string }
+  >
 > = {
   loading: { Icon: Loader2, iconClass: 'animate-spin text-amber-400', label: 'Loading Python...', labelClass: 'text-[var(--text-muted)]' },
-  ready: { Icon: CheckCircle2, iconClass: 'text-emerald-500', label: 'Interpreter Ready', labelClass: 'text-[var(--text-muted)]' },
-  running: { Icon: Loader2, iconClass: 'animate-spin text-accent', label: 'Running...', labelClass: 'text-accent' },
   error: { Icon: AlertCircle, iconClass: 'text-rose-500', label: 'Runtime Error', labelClass: 'text-rose-400' },
 };
 
@@ -460,16 +459,20 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             <span>Python 3</span>
           </div>
 
-          <span className="h-3.5 w-px shrink-0 bg-[var(--border-subtle)]" />
+          {status && (
+            <>
+              <span className="h-3.5 w-px shrink-0 bg-[var(--border-subtle)]" />
 
-          {/* Runtime status indicator */}
-          <div
-            className="flex min-w-0 items-center gap-1.5 text-xs"
-            title={runtimeError || 'In-browser Python interpreter'}
-          >
-            <status.Icon className={`h-3.5 w-3.5 shrink-0 ${status.iconClass}`} />
-            <span className={`truncate ${status.labelClass}`}>{status.label}</span>
-          </div>
+              {/* Runtime status indicator */}
+              <div
+                className="flex min-w-0 items-center gap-1.5 text-xs"
+                title={runtimeError || 'In-browser Python interpreter'}
+              >
+                <status.Icon className={`h-3.5 w-3.5 shrink-0 ${status.iconClass}`} />
+                <span className={`truncate ${status.labelClass}`}>{status.label}</span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Right Toolbar Actions */}
