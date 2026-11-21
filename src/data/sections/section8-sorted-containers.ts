@@ -27,7 +27,7 @@ print(sd.popitem(0))     # removes & returns ('c', 3)`,
       },
       {
         type: 'paragraph',
-        text: '`SortedDict` also supports binary search over sorted keys (`sd.bisect_left(key)`, `sd.bisect_right(key)`) and indexing (`sd.keys()[0]`, `sd.keys()[-1]`) in **O(log n)** time — making it ideal for *My Calendar*, *Stock Price Fluctuation*, and *Range Module* problems. (The upstream library stores sorted entries in blocks and documents its mutation costs as *approximately* O(log n). This website’s implementation uses flat lists, so inserting or deleting an entry can take O(n) here.)',
+        text: '`SortedDict` also supports binary search over sorted keys (`sd.bisect_left(key)`, `sd.bisect_right(key)`) and indexing (`sd.keys()[0]`, `sd.keys()[-1]`) in **O(log n)** time — making it ideal for problems like *My Calendar*, *Stock Price Fluctuation*, and *Range Module*. (The upstream library stores sorted entries in blocks and documents its mutation costs as *approximately* O(log n). This website’s implementation uses flat lists, so inserting or deleting an entry can take O(n) here.)',
       },
     ],
     challenge: {

@@ -259,7 +259,7 @@ _expected = {5: []}`,
     blocks: [
       {
         type: 'paragraph',
-        text: '`collections.Counter` is a specialized dictionary built specifically for counting hashable elements in one line. It is a favorite for **Valid Anagram**, **Top K Frequent Elements**, and **Sliding Window** problems.',
+        text: '`collections.Counter` is a specialized dictionary built specifically for counting hashable elements in one line. It is a favorite for problems like *Valid Anagram* and *Top K Frequent Elements*, as well as sliding window problems.',
       },
       {
         type: 'code',
@@ -575,7 +575,7 @@ seen.remove(1)     # Raises KeyError if missing`,
       },
       {
         type: 'paragraph',
-        text: 'Sets are indispensable for *Contains Duplicate*, *Longest Consecutive Sequence*, *Graph Visited Tracking*, and set algebra (`a & b` intersection, `a | b` union, `a - b` difference).',
+        text: 'Sets are indispensable for problems like *Contains Duplicate* and *Longest Consecutive Sequence*, tracking visited nodes in graphs, and set algebra (`a & b` intersection, `a | b` union, `a - b` difference).',
       },
     ],
     challenge: {
@@ -809,7 +809,7 @@ memo[(i, remaining)] = answer`,
       {
         type: 'note',
         title: 'Classic Interview Use Cases',
-        text: 'Tuple keys unlock **2D Grid BFS/DFS visited sets** `(r, c)`, **Group Anagrams** (`tuple(count_of_26_letters)`), and **Top-Down DP memoization** `(idx, state)`.',
+        text: 'Tuple keys unlock problems like *Group Anagrams* (`tuple(count_of_26_letters)`), as well as 2D grid BFS/DFS visited sets `(r, c)` and top-down DP memoization `(idx, state)`.',
       },
     ],
     challenge: {

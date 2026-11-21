@@ -389,7 +389,7 @@ second  = -heapq.heappop(max_heap)   # 4`,
       {
         type: 'note',
         title: 'Classic Interview Problems',
-        text: 'Negated max-heaps show up constantly in *Last Stone Weight*, *Find Median from Data Stream* (two heaps!), *Task Scheduler*, and *Reorganize String*.',
+        text: 'Negated max-heaps show up constantly in problems like *Last Stone Weight*, *Find Median from Data Stream* (two heaps!), *Task Scheduler*, and *Reorganize String*.',
       },
     ],
     challenge: {
@@ -489,7 +489,7 @@ while tasks:
       },
       {
         type: 'paragraph',
-        text: 'Python compares tuples **lexicographically**: first by element `0`, then breaking ties by element `1`, and so on. If element `1` isn’t comparable (like a `ListNode` in *Merge K Sorted Lists*), insert a unique counter as a tie-breaker: `(priority, tie_breaker, node)`.',
+        text: 'Python compares tuples **lexicographically**: first by element `0`, then breaking ties by element `1`, and so on. If element `1` isn’t comparable (like a `ListNode` in the *Merge K Sorted Lists* problem), insert a unique counter as a tie-breaker: `(priority, tie_breaker, node)`.',
       },
     ],
     challenge: {

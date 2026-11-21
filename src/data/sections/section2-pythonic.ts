@@ -285,7 +285,7 @@ for i, n in enumerate(nums):
       {
         type: 'note',
         title: 'Interview Classic',
-        text: 'Patterns like *Two Sum*, *Sliding Window*, and *Monotonic Stack* almost always pair `for i, num in enumerate(nums):` with a hash map or stack storing indices.',
+        text: 'Problems like *Two Sum* and patterns like sliding window and monotonic stack almost always pair `for i, num in enumerate(nums):` with a hash map or stack storing indices.',
       },
     ],
     challenge: {

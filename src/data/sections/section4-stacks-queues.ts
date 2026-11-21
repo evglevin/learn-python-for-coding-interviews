@@ -24,7 +24,7 @@ is_empty = len(stack) == 0  # or: not stack`,
       },
       {
         type: 'paragraph',
-        text: 'Stacks power *Valid Parentheses*, *Iterative DFS*, *Monotonic Stack* (Next Greater Element, Daily Temperatures), and *Expression Evaluation*.',
+        text: 'Stacks power classic problems like *Valid Parentheses*, *Next Greater Element*, and *Daily Temperatures* (using a monotonic stack), as well as iterative DFS and expression evaluation.',
       },
     ],
     challenge: {
@@ -245,7 +245,7 @@ front, back = dq[0], dq[-1]`,
       },
       {
         type: 'paragraph',
-        text: 'Double-ended queues are essential for **Sliding Window Maximum** (monotonic deque), **0-1 BFS**, and **Palindrome Checking**.',
+        text: 'Double-ended queues are essential for problems like *Sliding Window Maximum* (using a monotonic deque), as well as 0-1 BFS and palindrome checking.',
       },
     ],
     challenge: {
