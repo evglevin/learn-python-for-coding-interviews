@@ -299,7 +299,7 @@ const STATUS_UI: Record<
   { Icon: typeof Loader2; iconClass: string; label: string; labelClass: string }
 > = {
   loading: { Icon: Loader2, iconClass: 'animate-spin text-amber-400', label: 'Loading Python...', labelClass: 'text-[var(--text-muted)]' },
-  ready: { Icon: CheckCircle2, iconClass: 'text-emerald-500', label: 'Pyodide Ready', labelClass: 'text-[var(--text-muted)]' },
+  ready: { Icon: CheckCircle2, iconClass: 'text-emerald-500', label: 'Interpreter Ready', labelClass: 'text-[var(--text-muted)]' },
   running: { Icon: Loader2, iconClass: 'animate-spin text-accent', label: 'Running...', labelClass: 'text-accent' },
   error: { Icon: AlertCircle, iconClass: 'text-rose-500', label: 'Runtime Error', labelClass: 'text-rose-400' },
 };
@@ -465,7 +465,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           {/* Runtime status indicator */}
           <div
             className="flex min-w-0 items-center gap-1.5 text-xs"
-            title={runtimeError || 'In-browser Python WebAssembly (Pyodide)'}
+            title={runtimeError || 'In-browser Python interpreter'}
           >
             <status.Icon className={`h-3.5 w-3.5 shrink-0 ${status.iconClass}`} />
             <span className={`truncate ${status.labelClass}`}>{status.label}</span>

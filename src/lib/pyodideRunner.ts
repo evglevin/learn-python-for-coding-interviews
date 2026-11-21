@@ -58,7 +58,7 @@ class PyodideRunner {
     let markFailed: () => void = () => {};
     this.ready = new Promise<void>((resolve, reject) => {
       markReady = resolve;
-      markFailed = () => reject(new Error('Python runtime failed to load.'));
+      markFailed = () => reject(new Error('Python interpreter failed to load.'));
     });
     // Rejection is handled via fail(); keep it from surfacing as unhandled.
     this.ready.catch(() => {});
@@ -84,7 +84,7 @@ class PyodideRunner {
     };
 
     worker.onerror = (err) => {
-      fail(err.message || 'Python runtime worker crashed.');
+      fail(err.message || 'Python interpreter crashed.');
     };
 
     worker.postMessage({ type: 'init' });
