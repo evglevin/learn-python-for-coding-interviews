@@ -2,8 +2,7 @@
 
 A completely local, offline-capable interactive Python course covering all **40 lessons across 8 sections** for coding interview preparation — with in-browser Python execution (Pyodide WebAssembly), CodeMirror 6 Python syntax highlighting, unit test grading, progressive hints, and persistent progress tracking.
 
-<img width="3456" height="2234" alt="python-for-coding-interviews-mbp16" src="https://github.com/user-attachments/assets/47ce1384-569c-49f8-891d-f6c56fb41109" />
-
+<img width="3456" height="2234" alt="python-for-coding-interviews-mbp16" src="https://github.com/user-attachments/assets/f8edd4c4-eade-40ba-80c5-9cec0459e8a6" />
 
 ## Quick Start
 
