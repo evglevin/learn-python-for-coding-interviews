@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { highlightCode } from '@lezer/highlight';
 import { Check, Copy, ArrowDownToLine } from 'lucide-react';
-import { pythonHighlighting, pythonLanguageSupport } from '../lib/pythonHighlighting';
+import { highlightPythonCode, pythonHighlighting } from '../lib/pythonHighlighting';
 
 interface PythonCodeBlockProps {
   code: string;
@@ -32,19 +31,13 @@ export const PythonCodeBlock: React.FC<PythonCodeBlockProps> = ({
 
   const { style, foreground } = pythonHighlighting[theme];
   const source = code.trimEnd();
-  const tree = useMemo(() => pythonLanguageSupport.language.parser.parse(source), [source]);
-  const highlightedCode = useMemo(() => {
-    const content: React.ReactNode[] = [];
-    highlightCode(
-      source,
-      tree,
-      style,
-      (text, classes) =>
-        content.push(classes ? <span key={content.length} className={classes}>{text}</span> : text),
-      () => content.push('\n')
-    );
-    return content;
-  }, [source, tree, style]);
+  const highlightedCode = useMemo(
+    () =>
+      highlightPythonCode(source, style).map(({ text, classes }, i) =>
+        classes ? <span key={i} className={classes}>{text}</span> : text
+      ),
+    [source, style]
+  );
 
   return (
     <div

@@ -23,7 +23,6 @@ import {
   bracketMatching,
   foldGutter,
   foldKeymap,
-  syntaxHighlighting,
   indentUnit,
 } from '@codemirror/language';
 import {
@@ -34,7 +33,11 @@ import {
   completionKeymap,
 } from '@codemirror/autocomplete';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { pythonHighlighting, pythonLanguageSupport } from '../lib/pythonHighlighting';
+import {
+  pythonHighlighting,
+  pythonLanguageSupport,
+  pythonSyntaxHighlighting,
+} from '../lib/pythonHighlighting';
 import { pythonCompletionSource, pythonSignatureHelp } from '../lib/pythonCompletions';
 import {
   RotateCcw,
@@ -289,7 +292,7 @@ function makeEditorTheme(theme: 'dark' | 'light', fontSize: number) {
 function themeExtensions(theme: 'dark' | 'light', fontSize: number): Extension {
   return [
     makeEditorTheme(theme, fontSize),
-    syntaxHighlighting(pythonHighlighting[theme].style),
+    pythonSyntaxHighlighting(pythonHighlighting[theme].style),
   ];
 }
 
