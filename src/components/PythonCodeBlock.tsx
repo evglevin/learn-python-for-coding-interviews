@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Check, Copy, ArrowDownToLine } from 'lucide-react';
+import { Check, Copy, ArrowRightToLine } from 'lucide-react';
 import { highlightPythonCode, pythonHighlighting } from '../lib/pythonHighlighting';
 
 interface PythonCodeBlockProps {
@@ -64,7 +64,7 @@ export const PythonCodeBlock: React.FC<PythonCodeBlockProps> = ({
               className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] cursor-pointer"
               title="Load solution into editor"
             >
-              <ArrowDownToLine className="h-3.5 w-3.5" />
+              <ArrowRightToLine className="h-3.5 w-3.5" />
               Load in Editor
             </button>
           )}
